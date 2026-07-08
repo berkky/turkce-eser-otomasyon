@@ -1,0 +1,5 @@
+Bu ZIP yama değildir; eksiksiz tam projedir.
+
+Adım 23 için gereken tüm Java kaynaklarını, pom.xml dosyasını, PowerShell başlatıcılarını, Archive.org kaynak alımını, arşiv/Excel/TTS kuyruğunu, metadata güvenlik-kurtarma katmanını, UTF-8 araçlarını ve Adım 17–23 mimari belgelerini içerir.
+
+Paket adı: eser-otomasyon-adim-23-metadata-guvenlik-ve-kurtarma

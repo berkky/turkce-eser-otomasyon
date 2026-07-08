@@ -1,0 +1,14 @@
+ADIM 23 — KURULUM
+
+1. ZIP dosyasını ayrı bir klasöre çıkartın.
+2. Adım 22 klasörünü doğrulama tamamlanana kadar silmeyin.
+3. PowerShell'i proje klasöründe açın.
+4. Şunu çalıştırın:
+
+   powershell -ExecutionPolicy Bypass -File .\adim23-self-test.ps1
+
+5. Doğrulama başarılı olduktan sonra bozulmuş kayıt için:
+
+   powershell -ExecutionPolicy Bypass -File .\metadata-kurtar.ps1 -EserId 6
+
+Kurtarma işlemi TTS parçalarına dokunmaz ve önce kalıcı yedek oluşturur.
