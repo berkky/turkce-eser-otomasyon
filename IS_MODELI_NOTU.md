@@ -43,7 +43,7 @@ Abartılı iddia yok: sistem "her kitabı yasal olarak seslendirir" demez.
 
 ## Gerekli Sonraki Yatırımlar
 
-1. Canlı ElevenLabs önizleme (onaylı, kredi korumalı)
+1. Canlı ElevenLabs önizleme (Adım 28 — tamamlandı, onaylı kısa önizleme)
 2. Lisans/hak yönetim modülü
 3. Telaffuz sözlüğü ve normalizasyon
 4. Bulut dağıtım ve kimlik doğrulama (isteğe bağlı)

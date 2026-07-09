@@ -29,6 +29,9 @@ public final class ElevenLabsFabrika {
     public static boolean mockModAktif() {
         String deger = System.getenv("ELEVENLABS_MOCK");
         if (deger == null || deger.isBlank()) {
+            deger = System.getProperty("ELEVENLABS_MOCK");
+        }
+        if (deger == null || deger.isBlank()) {
             return false;
         }
         String temiz = deger.trim().toLowerCase(Locale.ROOT);

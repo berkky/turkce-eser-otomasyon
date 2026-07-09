@@ -89,6 +89,13 @@ public final class DemoRaporService {
         sb.append("- Toplam karakter: ").append(String.format("%,d", m.toplamKarakter())).append("\n");
         sb.append("- TTS parça: ").append(m.toplamTtsParca()).append("\n");
         sb.append("- Git commit: `").append(m.gitCommit()).append("`\n\n");
+        sb.append("\n## Adım 28 — ElevenLabs Önizleme ve Telaffuz\n\n");
+        var el = ElevenLabsFabrika.durumOzeti();
+        sb.append("- ElevenLabs TTS: ").append(el.ttsDurumu()).append(" — ").append(el.mesaj()).append("\n");
+        sb.append("- Önizleme modu: KISA_ONIZLEME (yalnızca ESER-00005, açık onay)\n");
+        sb.append("- Telaffuz sözlüğü: yerel JSON + METIN_NORMALIZE\n");
+        sb.append("- Tam eser üretimi: KAPALI (web panelinden başlatılamaz)\n");
+        sb.append("- Büyük eser (ESER-00006): maliyet onayı şart\n\n");
         sb.append("## Demo Akışı (7 adım)\n\n");
         for (DemoAdimi a : adimlar) {
             sb.append(a.sira()).append(". **").append(a.baslik()).append("** [").append(a.durum()).append("]\n");
@@ -188,7 +195,7 @@ public final class DemoRaporService {
                 - Derleme: `mvn -q -DskipTests compile`
                 - Web panel: `powershell -ExecutionPolicy Bypass -File .\\web-panel.ps1`
                 - Demo sayfası: http://127.0.0.1:8787/demo
-                - Self-test: `powershell -ExecutionPolicy Bypass -File .\\adim27-self-test.ps1`
+                - Self-test: `powershell -ExecutionPolicy Bypass -File .\\adim28-self-test.ps1`
                 - Demo paketi: `powershell -ExecutionPolicy Bypass -File .\\patron-demo-paketi.ps1`
                 
                 API anahtarları ortam değişkenlerinden okunur; hiçbir ekranda gösterilmez.

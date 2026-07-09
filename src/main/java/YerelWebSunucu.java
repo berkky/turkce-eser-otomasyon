@@ -110,6 +110,16 @@ public final class YerelWebSunucu {
         if (path.equals("/api/kalite") && "GET".equals(method)) {
             return WebResponse.jsonOk(kalitePanel.kaliteJson());
         }
+        if (path.startsWith("/api/tts-plan/") && "GET".equals(method)) {
+            int id = parseId(path.substring("/api/tts-plan/".length()));
+            return WebResponse.jsonOk(new TtsMaliyetPlanService(ortam).json(id));
+        }
+        if (path.equals("/api/telaffuz") && "GET".equals(method)) {
+            return WebResponse.jsonOk(kalitePanel.telaffuzJson());
+        }
+        if (path.equals("/api/elevenlabs/status") && "GET".equals(method)) {
+            return WebResponse.jsonOk(ElevenLabsApiService.durumJson());
+        }
         if (path.equals("/api/kuyruk") && "GET".equals(method)) {
             return WebResponse.jsonOk(kuyrukJson());
         }
@@ -136,9 +146,16 @@ public final class YerelWebSunucu {
         }
         if (path.startsWith("/eser/")) {
             int id = parseId(path.substring("/eser/".length()));
+            if (path.endsWith("/tts-plan")) {
+                id = parseId(path.substring("/eser/".length()).replace("/tts-plan", ""));
+                return WebResponse.jsonOk(new TtsMaliyetPlanService(ortam).json(id));
+            }
             WebEserService.WebEserDetay d = new WebEserService(ortam).eserDetay(id);
-            return d == null ? WebResponse.notFound("Eser bulunamadı")
-                    : WebResponse.htmlOk(WebTemplateService.eserDetay(d, kalitePanel));
+            if (d == null) {
+                return WebResponse.notFound("Eser bulunamadı");
+            }
+            TtsMaliyetPlanService.TtsMaliyetPlani plan = new TtsMaliyetPlanService(ortam).planla(id);
+            return WebResponse.htmlOk(WebTemplateService.eserDetay(d, kalitePanel, plan, islemService.yeniNonce()));
         }
         if (path.equals("/kalite")) {
             Map<String, String> media = tersMediaHaritasi();
@@ -157,7 +174,7 @@ public final class YerelWebSunucu {
         }
         if (path.equals("/docs")) {
             return WebResponse.htmlOk(WebTemplateService.docs(List.of(
-                    "README.md", "PROJE_DURUMU.md", "ADIM_26_MIMARI.md", "ADIM_27_MIMARI.md",
+                    "README.md", "PROJE_DURUMU.md", "ADIM_26_MIMARI.md", "ADIM_27_MIMARI.md", "ADIM_28_MIMARI.md",
                     "DEMO_SENARYOSU.md", "IS_MODELI_NOTU.md", "TTS_ARASTIRMA_VE_YOL_HARITASI.md")));
         }
         if (path.startsWith("/docs/")) {
@@ -165,7 +182,8 @@ public final class YerelWebSunucu {
             return docSayfa(ad);
         }
         if (path.equals("/telaffuz")) {
-            return WebResponse.htmlOk(WebTemplateService.telaffuz(kalitePanel.telaffuzJson()));
+            var sozluk = new TelaffuzSozluguService(ortam.kalitePanel());
+            return WebResponse.htmlOk(WebTemplateService.telaffuz(sozluk.yukle(), sozluk.jsonGuvenli()));
         }
         if (path.equals("/demo")) {
             return WebResponse.htmlOk(demoSayfa());
@@ -231,7 +249,7 @@ public final class YerelWebSunucu {
         if (!islemService.nonceGecerli(form.get("nonce"))) {
             return WebResponse.forbidden("Geçersiz veya süresi dolmuş nonce");
         }
-        WebIslemSonucu sonuc = islemService.islem(form.get("aksiyon"));
+        WebIslemSonucu sonuc = islemService.islem(form.get("aksiyon"), form);
         String q = "mesaj=" + java.net.URLEncoder.encode(sonuc.mesaj(), StandardCharsets.UTF_8);
         return WebResponse.redirect(sonuc.yonlendirme() + "?" + q);
     }
@@ -273,6 +291,7 @@ public final class YerelWebSunucu {
     }
 
     private String demoSayfa() throws Exception {
+        var adim28 = demoAdim28Durumu();
         var veri = new WebTemplateService.DemoSayfaVeri(
                 DemoDegerOnerisiService.DEGER_ONERISI,
                 DemoGuvenlikService.simulasyonNotu(),
@@ -282,9 +301,34 @@ public final class YerelWebSunucu {
                 DemoDegerOnerisiService.onceSonra(),
                 DemoDegerOnerisiService.yapildiKaldi(),
                 DemoGuvenlikService.uyarilar(),
-                DemoDegerOnerisiService.risklerVeSonraki()
+                DemoDegerOnerisiService.risklerVeSonraki(),
+                adim28
         );
         return WebTemplateService.demo(veri);
+    }
+
+    private WebTemplateService.Adim28Bolum demoAdim28Durumu() throws Exception {
+        var el = ElevenLabsFabrika.durumOzeti();
+        boolean krediVar = el.hazir() || el.mockMod();
+        String krediMesaj = krediVar
+                ? "Kaşağı için önizleme üretilebilir (açık onay gerekir)."
+                : "ElevenLabs kredisi bekleniyor — " + el.mesaj();
+
+        String audioHtml = "";
+        boolean onizVar = false;
+        for (SesOnizlemeKaydi k : kalitePanel.rapor().onizlemeler()) {
+            if (k.eserId() == SesKaliteOlcutleri.KASAGI_ESER_ID
+                    && "ELEVENLABS".equalsIgnoreCase(k.provider())
+                    && k.audioPath() != null && !k.audioPath().isBlank()
+                    && !SesKaliteOlcutleri.DURUM_BEKLENIYOR.equals(k.status())) {
+                String mediaId = WebKalitePanelService.guvenliId(k);
+                audioHtml = "<audio controls src=\"/media/preview/" + WebGuvenlikService.htmlKacis(mediaId)
+                        + "\"></audio><span class=\"badge ok\">premium önizleme hazır</span>";
+                onizVar = true;
+                break;
+            }
+        }
+        return new WebTemplateService.Adim28Bolum(krediVar, onizVar, krediMesaj, audioHtml);
     }
 
     private String statusJson() throws Exception {

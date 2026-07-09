@@ -84,13 +84,6 @@ public final class WebKalitePanelService {
     }
 
     public String telaffuzJson() throws Exception {
-        Path dosya = ortam.kalitePanel().resolve("telaffuz-notlari.json");
-        if (!Files.isRegularFile(dosya)) {
-            ObjectNode bos = json.createObjectNode();
-            bos.put("notlar", "Dosya henüz oluşturulmadı");
-            return json.writeValueAsString(bos);
-        }
-        String icerik = Files.readString(dosya, StandardCharsets.UTF_8);
-        return WebGuvenlikService.guvenliJson(icerik);
+        return new TelaffuzSozluguService(ortam.kalitePanel()).jsonGuvenli();
     }
 }

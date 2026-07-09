@@ -103,10 +103,28 @@ public final class WebGuvenlikService {
     }
 
     public static String guvenliJson(String json) {
-        if (apiKeySizintisiVar(json)) {
+        String temiz = gizliDegerleriTemizle(json);
+        if (apiKeySizintisiVar(temiz)) {
             throw new GuvenlikIstisnasi("JSON çıktısında hassas veri tespit edildi.");
         }
-        return json;
+        return temiz;
+    }
+
+    public static String gizliDegerleriTemizle(String metin) {
+        if (metin == null) {
+            return "";
+        }
+        String sonuc = metin;
+        for (String ad : new String[]{
+                "ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID",
+                "OPENAI_API_KEY", "GEMINI_API_KEY", "AZURE_SPEECH_KEY"
+        }) {
+            String deger = TtsLaboratuvarYardimci.ortam(ad, "");
+            if (!deger.isBlank() && sonuc.contains(deger)) {
+                sonuc = sonuc.replace(deger, "[GIZLI]");
+            }
+        }
+        return sonuc;
     }
 
     public static String icerikTipi(Path dosya) {

@@ -164,21 +164,11 @@ public final class SesKalitePanelService {
         return JSON.writerWithDefaultPrettyPrinter().writeValueAsString(kok);
     }
 
-    private static void telaffuzSablonuKoru(Path dosya) throws IOException {
+    private static void telaffuzSablonuKoru(Path dosya) throws Exception {
         if (Files.isRegularFile(dosya)) {
             return;
         }
-        ObjectNode kok = JSON.createObjectNode();
-        kok.put("aciklama", "Telaffuz notları — ileride ElevenLabs pronunciation dictionary veya metin normalizasyonuna aktarılabilir.");
-        ArrayNode notlar = kok.putArray("notlar");
-        for (String kelime : List.of("Kaşağı", "Alfa Yayınları", "DK", "ISBN", "Ahmet Fethi", "Evliya Çelebi")) {
-            ObjectNode n = notlar.addObject();
-            n.put("kelime", kelime);
-            n.put("telaffuz", "");
-            n.put("not", "");
-        }
-        Files.writeString(dosya, JSON.writerWithDefaultPrettyPrinter().writeValueAsString(kok),
-                StandardCharsets.UTF_8);
+        new TelaffuzSozluguService(dosya.getParent()).yukle();
     }
 
     private static List<SesSaglayiciKarsilastirma> karsilastirmaOlustur(

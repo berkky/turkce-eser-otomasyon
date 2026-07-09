@@ -28,22 +28,29 @@
 
 > "Sistem hem kısa hem büyük eserleri aynı pipeline'dan geçirir; büyük eserlerde maliyet koruması devreye girer."
 
-### 3. Kalite ve maliyet kontrolü (60 sn) — `/kalite`
+### 3. Adım 28 — Premium önizleme (60 sn) — `/demo` Adım 28 bölümü
 
-- Sağlayıcı karşılaştırması (Piper / ElevenLabs mock)
-- İnsan puanlama ve telaffuz notları
-- **ElevenLabs kredisi yoksa:** "Şu an premium ses üretimi kapalı; mock önizleme ile akışı gösteriyoruz. Canlı önizleme bir sonraki adımda onaylı açılacak."
+- Kredi varsa: "Kaşağı için önizleme üretilebilir"
+- Kredi yoksa: "ElevenLabs kredisi bekleniyor"
+- Önizleme varsa: audio player + kalite paneli linki
+- `/islemler` veya `/eser/5` → onaylı önizleme formu (tam üretim kapalı)
 
-### 4. Güvenlik ve ürünleşme (60 sn) — `/sistem` veya `/demo` güvenlik bölümü
+### 4. Kalite ve maliyet kontrolü (60 sn) — `/kalite` ve `/telaffuz`
+
+- Sağlayıcı karşılaştırması (Piper / ElevenLabs)
+- Telaffuz sözlüğü tablosu (`METIN_NORMALIZE` / dictionary adayı)
+- `/api/tts-plan/5` — salt okunur maliyet planı
+
+### 5. Güvenlik ve ürünleşme (60 sn) — `/sistem` veya `/demo` güvenlik bölümü
 
 - Localhost only, API anahtarları gizli
 - Metadata KONTROL_GEREKIYOR = güvenlik bilinçli tasarım
 - GitHub: https://github.com/berkky/turkce-eser-otomasyon
 
-### 5. Kapanış (30 sn)
+### 6. Kapanış (30 sn)
 
 - Önce/sonra karşılaştırması
-- Sonraki adım: onaylı canlı önizleme
+- Sonraki adım: forced alignment (Adım 29)
 - **DUR:** Soru-cevap
 
 ## ElevenLabs Kredisi Yoksa
@@ -61,4 +68,4 @@
 | Seslendirme hazır mı? | Altyapı hazır; tam üretim onay ve kredi gerektirir. |
 | Maliyeti nasıl kontrol ediyor? | Kredi kontrolü, önizleme, büyük eser koruması, idempotency. |
 | Yasal/hak durumu? | Her eser için ayrı lisans değerlendirmesi gerekir; sistem otomatik hak onayı vermez. |
-| Bundan sonra ne gerekiyor? | Canlı önizleme, telaffuz sözlüğü, üretim onay akışı. |
+| Bundan sonra ne gerekiyor? | Forced alignment, onaylı tam eser üretim akışı (Adım 29+). |

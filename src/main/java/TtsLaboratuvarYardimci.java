@@ -11,12 +11,14 @@ public final class TtsLaboratuvarYardimci {
 
     public static String ortam(String ad, String varsayilan) {
         String deger = System.getenv(ad);
+        if (deger == null || deger.isBlank()) {
+            deger = System.getProperty(ad);
+        }
         return deger == null || deger.isBlank() ? varsayilan : deger.trim();
     }
 
     public static boolean ortamVar(String ad) {
-        String deger = System.getenv(ad);
-        return deger != null && !deger.isBlank();
+        return !ortam(ad, "").isBlank();
     }
 
     public static String guvenliDosyaAdi(String metin) {

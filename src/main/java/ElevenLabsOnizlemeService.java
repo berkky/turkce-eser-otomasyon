@@ -35,7 +35,7 @@ public final class ElevenLabsOnizlemeService {
                                       Path metinArsivKlasoru,
                                       Path sesArsivKlasoru,
                                       ElevenLabsIstemci istemciOverride) {
-        return uret(eserId, metinArsivKlasoru, sesArsivKlasoru, istemciOverride, null);
+        return uret(eserId, metinArsivKlasoru, sesArsivKlasoru, null, istemciOverride, null);
     }
 
     public static OnizlemeSonucu uret(int eserId,
@@ -43,11 +43,33 @@ public final class ElevenLabsOnizlemeService {
                                       Path sesArsivKlasoru,
                                       ElevenLabsIstemci istemciOverride,
                                       String voiceIdOverride) {
+        return uret(eserId, metinArsivKlasoru, sesArsivKlasoru, null, istemciOverride, voiceIdOverride);
+    }
+
+    public static OnizlemeSonucu uret(int eserId,
+                                      Path metinArsivKlasoru,
+                                      Path sesArsivKlasoru,
+                                      Path kalitePanelKlasoru,
+                                      ElevenLabsIstemci istemciOverride,
+                                      String voiceIdOverride) {
         Path logDosyasi = null;
         try {
             if (eserId <= 0) {
                 throw new IllegalArgumentException("Geçerli bir eser ID gerekli.");
             }
+            if (eserId == SesKaliteOlcutleri.ASTRONOMI_ESER_ID) {
+                throw new IllegalStateException(
+                        "ESER-00006 büyük eser — gerçek önizleme/üretim bu adımda engelli. Önce maliyet planı ve onay gerekir.");
+            }
+
+            Path kalitePanel = kalitePanelKlasoru != null ? kalitePanelKlasoru
+                    : Path.of(System.getProperty("user.home"), "Desktop", "ses-arsivi_kalite-panel");
+            String panelEnv = System.getenv("SES_KALITE_PANEL");
+            if (panelEnv != null && !panelEnv.isBlank()) {
+                kalitePanel = Path.of(panelEnv.trim());
+            }
+            List<TelaffuzNotu> telaffuzNotlari = new TelaffuzSozluguService(kalitePanel).yukle();
+            String telaffuzRevizyon = TelaffuzNormalizerService.revisionHash(telaffuzNotlari);
 
             Path metinEserKlasoru = eserKlasoruBul(metinArsivKlasoru, eserId);
             if (metinEserKlasoru == null) {
@@ -86,18 +108,18 @@ public final class ElevenLabsOnizlemeService {
                     && !ElevenLabsFabrika.mockModAktif()
                     && !TtsLaboratuvarYardimci.ortamVar("ELEVENLABS_API_KEY")) {
                 return sonucYaz(json, logDosyasi, basarisizJson(eserId, eserAdi, modelId, voiceId,
-                        0, 0, mp3, List.of(), "ELEVENLABS_API_KEY yok"));
+                        null, 0, mp3, List.of(), "ELEVENLABS_API_KEY yok", telaffuzRevizyon));
             }
             if (voiceId.isBlank()) {
                 return sonucYaz(json, logDosyasi, basarisizJson(eserId, eserAdi, modelId, voiceId,
-                        0, 0, mp3, List.of(), "ELEVENLABS_VOICE_ID yok"));
+                        null, 0, mp3, List.of(), "ELEVENLABS_VOICE_ID yok", telaffuzRevizyon));
             }
 
-            OnizlemeMetni metin = onizlemeMetniHazirla(parcalar);
+            OnizlemeMetni metin = onizlemeMetniHazirla(parcalar, telaffuzNotlari);
             Files.writeString(inputTxt, metin.metin(), StandardCharsets.UTF_8);
 
             long tahminiKredi = tahminiKredi(metin.metin().length(), modelId);
-            String requestHash = requestHash(metin.metin(), modelId, voiceId);
+            String requestHash = requestHash(metin.metin(), modelId, voiceId, telaffuzRevizyon);
 
             if (mevcutOnizlemeKullanilabilir(json, mp3, requestHash)) {
                 logYaz(logDosyasi, "Mevcut önizleme kullanıldı | requestHash=" + requestHash);
@@ -117,20 +139,20 @@ public final class ElevenLabsOnizlemeService {
                         + abonelik.kullanilanKredi() + "/" + abonelik.donemKrediLimiti() + " kullanıldı";
                 logYaz(logDosyasi, "Üretim yapılmadı | " + mesaj);
                 return sonucYaz(json, logDosyasi, basarisizJson(eserId, eserAdi, modelId, voiceId,
-                        metin.metin().length(), tahminiKredi, mp3, metin.kaynakChunkIds(), mesaj));
+                        metin, tahminiKredi, mp3, metin.kaynakChunkIds(), mesaj, telaffuzRevizyon));
             }
             if (kalan < tahminiKredi) {
                 String mesaj = "Önizleme için yeterli kredi yok. Gerekli: " + tahminiKredi + " | Kalan: " + kalan;
                 logYaz(logDosyasi, mesaj);
                 return sonucYaz(json, logDosyasi, basarisizJson(eserId, eserAdi, modelId, voiceId,
-                        metin.metin().length(), tahminiKredi, mp3, metin.kaynakChunkIds(), mesaj));
+                        metin, tahminiKredi, mp3, metin.kaynakChunkIds(), mesaj, telaffuzRevizyon));
             }
 
             if (!client.sesIdDogrula(voiceId)) {
                 String mesaj = "ELEVENLABS_VOICE_ID doğrulanamadı";
                 logYaz(logDosyasi, mesaj);
                 return sonucYaz(json, logDosyasi, basarisizJson(eserId, eserAdi, modelId, voiceId,
-                        metin.metin().length(), tahminiKredi, mp3, metin.kaynakChunkIds(), mesaj));
+                        metin, tahminiKredi, mp3, metin.kaynakChunkIds(), mesaj, telaffuzRevizyon));
             }
 
             ElevenLabsClient.Ses ses = new ElevenLabsClient.Ses(
@@ -145,7 +167,7 @@ public final class ElevenLabsOnizlemeService {
             }
 
             ObjectNode sonuc = basariliJson(eserId, eserAdi, modelId, voiceId,
-                    metin.metin().length(), tahminiKredi, mp3, metin.kaynakChunkIds(), requestHash, uretim);
+                    metin, tahminiKredi, mp3, metin.kaynakChunkIds(), requestHash, uretim, telaffuzRevizyon);
             Files.writeString(json, JSON.writerWithDefaultPrettyPrinter().writeValueAsString(sonuc),
                     StandardCharsets.UTF_8);
             logYaz(logDosyasi, "Önizleme başarılı | " + mp3.toAbsolutePath());
@@ -171,13 +193,15 @@ public final class ElevenLabsOnizlemeService {
                                            String eserAdi,
                                            String modelId,
                                            String voiceId,
-                                           int karakter,
+                                           OnizlemeMetni metin,
                                            long tahminiKredi,
                                            Path mp3,
                                            List<String> chunkIds,
                                            String requestHash,
-                                           ElevenLabsClient.SesUretimSonucu uretim) {
-        ObjectNode json = ortakJson(eserId, eserAdi, modelId, voiceId, karakter, tahminiKredi, mp3, chunkIds, requestHash);
+                                           ElevenLabsClient.SesUretimSonucu uretim,
+                                           String telaffuzRevizyon) {
+        ObjectNode json = ortakJson(eserId, eserAdi, modelId, voiceId, metin, tahminiKredi, mp3, chunkIds,
+                requestHash, telaffuzRevizyon);
         json.put("status", "BASARILI");
         json.put("provider", "ELEVENLABS");
         json.put("outputFile", mp3.toAbsolutePath().toString());
@@ -190,13 +214,17 @@ public final class ElevenLabsOnizlemeService {
                                             String eserAdi,
                                             String modelId,
                                             String voiceId,
-                                            int karakter,
+                                            OnizlemeMetni metin,
                                             long tahminiKredi,
                                             Path mp3,
                                             List<String> chunkIds,
-                                            String hata) throws Exception {
-        ObjectNode json = ortakJson(eserId, eserAdi, modelId, voiceId, karakter, tahminiKredi, mp3, chunkIds,
-                requestHash("", modelId, voiceId));
+                                            String hata,
+                                            String telaffuzRevizyon) throws Exception {
+        OnizlemeMetni guvenli = metin != null ? metin
+                : new OnizlemeMetni("", 0, 0, chunkIds != null ? chunkIds : List.of(), List.of(), List.of());
+        String hash = requestHash(guvenli.metin(), modelId, voiceId, telaffuzRevizyon != null ? telaffuzRevizyon : "");
+        ObjectNode json = ortakJson(eserId, eserAdi, modelId, voiceId, guvenli, tahminiKredi, mp3,
+                guvenli.kaynakChunkIds(), hash, telaffuzRevizyon != null ? telaffuzRevizyon : "");
         json.put("status", "BASARISIZ");
         json.put("provider", "ELEVENLABS");
         json.put("outputFile", mp3.toAbsolutePath().toString());
@@ -208,25 +236,40 @@ public final class ElevenLabsOnizlemeService {
                                         String eserAdi,
                                         String modelId,
                                         String voiceId,
-                                        int karakter,
+                                        OnizlemeMetni metin,
                                         long tahminiKredi,
                                         Path mp3,
                                         List<String> chunkIds,
-                                        String requestHash) {
+                                        String requestHash,
+                                        String telaffuzRevizyon) {
         ObjectNode json = JSON.createObjectNode();
         json.put("eserId", eserId);
         json.put("eserAdi", eserAdi);
         json.put("provider", "ELEVENLABS");
+        json.put("previewMode", "KISA_ONIZLEME");
         json.put("modelId", modelId);
         json.put("voiceIdMasked", ElevenLabsClient.voiceIdMaskele(voiceId));
-        json.put("inputCharacterCount", karakter);
+        json.put("inputCharacterCount", metin.metin().length());
+        json.put("originalInputCharacterCount", metin.orijinalKarakter());
+        json.put("normalizedInputCharacterCount", metin.normalizeKarakter());
         json.put("estimatedCharacterCost", tahminiKredi);
         json.put("generatedAt", OffsetDateTime.now().toString());
         json.put("outputFile", mp3.toAbsolutePath().toString());
         json.put("requestHash", requestHash);
+        json.put("telaffuzRevision", telaffuzRevizyon);
+        json.put("alignmentStatus", AlignmentPlan.notRequested().status());
+        json.put("alignmentOutputPath", "");
         ArrayNode kaynaklar = json.putArray("sourceChunkIds");
         for (String id : chunkIds) {
             kaynaklar.add(id);
+        }
+        ArrayNode uygulanan = json.putArray("appliedPronunciationNotes");
+        for (String not : metin.uygulananNotlar()) {
+            uygulanan.add(not);
+        }
+        ArrayNode uyarilar = json.putArray("normalizationWarnings");
+        for (String uyari : metin.uyarilar()) {
+            uyarilar.add(uyari);
         }
         return json;
     }
@@ -246,7 +289,7 @@ public final class ElevenLabsOnizlemeService {
                 && ("BASARILI".equalsIgnoreCase(oncekiDurum) || "MEVCUT_KULLANILDI".equalsIgnoreCase(oncekiDurum));
     }
 
-    private static OnizlemeMetni onizlemeMetniHazirla(List<Path> parcalar) throws Exception {
+    private static OnizlemeMetni onizlemeMetniHazirla(List<Path> parcalar, List<TelaffuzNotu> telaffuzNotlari) throws Exception {
         StringBuilder birlestir = new StringBuilder();
         List<String> kaynaklar = new ArrayList<>();
         for (Path parca : parcalar) {
@@ -265,11 +308,14 @@ public final class ElevenLabsOnizlemeService {
             }
         }
 
-        String metin = onizlemeUzunluguAyarla(birlestir.toString());
-        if (metin.length() < MIN_KARAKTER / 3) {
+        String orijinal = onizlemeUzunluguAyarla(birlestir.toString());
+        if (orijinal.length() < MIN_KARAKTER / 3) {
             throw new IllegalStateException("Önizleme için yeterli metin bulunamadı.");
         }
-        return new OnizlemeMetni(metin, kaynaklar);
+        TelaffuzNormalizerService.Sonuc telaffuz = TelaffuzNormalizerService.uygula(orijinal, telaffuzNotlari);
+        String metin = telaffuz.metin();
+        return new OnizlemeMetni(metin, orijinal.length(), metin.length(), kaynaklar,
+                telaffuz.uygulananNotlar(), telaffuz.uyarilar());
     }
 
     private static String onizlemeUzunluguAyarla(String metin) {
@@ -293,8 +339,9 @@ public final class ElevenLabsOnizlemeService {
         return Math.max(1L, (long) Math.ceil(karakter * carpan));
     }
 
-    private static String requestHash(String metin, String modelId, String voiceId) throws Exception {
-        String ham = (metin == null ? "" : metin.trim()) + "|" + modelId + "|" + voiceId.trim();
+    private static String requestHash(String metin, String modelId, String voiceId, String telaffuzRevizyon) throws Exception {
+        String ham = (metin == null ? "" : metin.trim()) + "|" + modelId + "|" + voiceId.trim()
+                + "|" + (telaffuzRevizyon == null ? "" : telaffuzRevizyon);
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         return HexFormat.of().formatHex(digest.digest(ham.getBytes(StandardCharsets.UTF_8)));
     }
@@ -343,7 +390,12 @@ public final class ElevenLabsOnizlemeService {
         }
     }
 
-    private record OnizlemeMetni(String metin, List<String> kaynakChunkIds) {
+    private record OnizlemeMetni(String metin,
+                                 int orijinalKarakter,
+                                 int normalizeKarakter,
+                                 List<String> kaynakChunkIds,
+                                 List<String> uygulananNotlar,
+                                 List<String> uyarilar) {
     }
 
     public record OnizlemeSonucu(boolean basarili,

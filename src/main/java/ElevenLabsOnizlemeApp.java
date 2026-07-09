@@ -5,14 +5,23 @@ import java.nio.file.Path;
  * Kullanım: onizleme [eserId]
  */
 public final class ElevenLabsOnizlemeApp {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         Utf8Konsol.etkinlestir();
         int eserId = 5;
-        if (args.length > 0) {
+        boolean refreshPanel = false;
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i].trim();
+            if ("-RefreshPanel".equalsIgnoreCase(arg) || "--refresh-panel".equalsIgnoreCase(arg)) {
+                refreshPanel = true;
+                continue;
+            }
+            if (arg.startsWith("-")) {
+                continue;
+            }
             try {
-                eserId = Integer.parseInt(args[0].trim());
+                eserId = Integer.parseInt(arg);
             } catch (NumberFormatException e) {
-                System.err.println("Geçersiz eser ID: " + args[0]);
+                System.err.println("Geçersiz eser ID: " + arg);
                 System.exit(2);
             }
         }
@@ -20,6 +29,7 @@ public final class ElevenLabsOnizlemeApp {
         Path masaustu = Path.of(System.getProperty("user.home"), "Desktop");
         Path metinArsivi = ortamYolu("ESER_METIN_ARSIVI", masaustu.resolve("metin-arsivi"));
         Path sesArsivi = ortamYolu("ESER_SES_ARSIVI", masaustu.resolve("ses-arsivi"));
+        Path kalitePanel = ortamYolu("SES_KALITE_PANEL", masaustu.resolve("ses-arsivi_kalite-panel"));
 
         System.out.println("--- ELEVENLABS ÖNİZLEME ---");
         System.out.println("Eser ID: ESER-" + String.format("%05d", eserId));
@@ -27,12 +37,18 @@ public final class ElevenLabsOnizlemeApp {
         System.out.println();
 
         ElevenLabsOnizlemeService.OnizlemeSonucu sonuc =
-                ElevenLabsOnizlemeService.uret(eserId, metinArsivi, sesArsivi, null);
+                ElevenLabsOnizlemeService.uret(eserId, metinArsivi, sesArsivi, kalitePanel, null, null);
 
         if (sonuc.basarili()) {
             System.out.println(sonuc.mesaj());
             System.out.println("MP3 : " + sonuc.mp3());
             System.out.println("JSON: " + sonuc.json());
+            if (refreshPanel) {
+                System.out.println("Kalite paneli yenileniyor...");
+                SesKalitePanelService.uret(sesArsivi, metinArsivi, kalitePanel,
+                        Path.of(System.getProperty("user.dir")));
+                System.out.println("Kalite paneli güncellendi: " + kalitePanel.resolve("kalite-panel.json"));
+            }
             System.exit(0);
         }
 

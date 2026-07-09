@@ -30,7 +30,7 @@ public final class WebTemplateService {
                   <main>
                     %s
                   </main>
-                  <footer>Eser Otomasyon · Adım 27 · API anahtarları asla gösterilmez</footer>
+                  <footer>Eser Otomasyon · Adım 28 · API anahtarları asla gösterilmez</footer>
                   <script src="/assets/app.js"></script>
                 </body>
                 </html>
@@ -124,7 +124,10 @@ public final class WebTemplateService {
         return layout("Eserler", "eserler", govde);
     }
 
-    public static String eserDetay(WebEserService.WebEserDetay d, WebKalitePanelService kalite) {
+    public static String eserDetay(WebEserService.WebEserDetay d,
+                                   WebKalitePanelService kalite,
+                                   TtsMaliyetPlanService.TtsMaliyetPlani plan,
+                                   String nonce) {
         WebEserService.WebEserOzeti e = d.ozet();
         StringBuilder oniz = new StringBuilder();
         for (SesOnizlemeKaydi k : d.onizlemeler()) {
@@ -148,8 +151,10 @@ public final class WebTemplateService {
         String metaLink = d.metadataJson() != null
                 ? "<a class=\"btn secondary\" href=\"/media/file?tip=meta&eser=" + e.eserId() + "\">Metadata JSON</a>" : "";
         String demoBolum = demoEserBolumu(e);
+        String ttsPlan = ttsPlanBolumu(e, plan, nonce);
         String govde = """
                 <h2>ESER-%s — %s</h2>
+                %s
                 %s
                 %s
                 <div class="cards">
@@ -165,7 +170,7 @@ public final class WebTemplateService {
                 <h3>Önizlemeler</h3><ul>%s</ul>
                 <h3>Metin özeti</h3><pre>%s</pre>
                 """.formatted(
-                String.format("%05d", e.eserId()), WebGuvenlikService.htmlKacis(e.eserAdi()), buyukUyari, demoBolum,
+                String.format("%05d", e.eserId()), WebGuvenlikService.htmlKacis(e.eserAdi()), buyukUyari, demoBolum, ttsPlan,
                 WebGuvenlikService.htmlKacis(e.yazar()), WebGuvenlikService.htmlKacis(e.metadataDurumu()),
                 e.ttsParca(), e.karakter(), WebGuvenlikService.htmlKacis(e.isbn()),
                 WebGuvenlikService.htmlKacis(e.yayinevi()), WebGuvenlikService.htmlKacis(d.kanit()),
@@ -263,7 +268,15 @@ public final class WebTemplateService {
                   <input type="hidden" name="aksiyon" value="eser-tara">
                   <button class="btn secondary" type="submit">Eser listesini yeniden tara</button>
                 </form>
-                """.formatted(nonce, nonce, nonce);
+                <h3>ElevenLabs Önizleme (Adım 28)</h3>
+                <div class="alert">Yalnızca ESER-00005 Kaşağı için açık önizleme. Tam eser üretimi başlatılmaz.</div>
+                <form method="post" action="/islemler" style="margin:.75rem 0">
+                  <input type="hidden" name="nonce" value="%s">
+                  <input type="hidden" name="aksiyon" value="elevenlabs-onizleme">
+                  <input type="hidden" name="eserId" value="5">
+                  <button class="btn" type="submit">Kaşağı ElevenLabs önizlemesi üret</button>
+                </form>
+                """.formatted(nonce, nonce, nonce, nonce);
         return layout("Güvenli İşlemler", "islemler", govde);
     }
 
@@ -281,9 +294,34 @@ public final class WebTemplateService {
                 + "</h2><pre>" + WebGuvenlikService.htmlKacis(icerik) + "</pre>");
     }
 
-    public static String telaffuz(String json) {
-        return layout("Telaffuz", "telaffuz", "<h2>Telaffuz Notları</h2><pre>"
-                + WebGuvenlikService.htmlKacis(json) + "</pre><p>Canlı pronunciation API bu adımda kullanılmaz.</p>");
+    public static String telaffuz(List<TelaffuzNotu> notlar, String json) {
+        StringBuilder satirlar = new StringBuilder();
+        for (TelaffuzNotu n : notlar) {
+            String eser = n.eserId() > 0 ? "ESER-" + String.format("%05d", n.eserId()) : "Genel";
+            String mod = n.uygulanmaModu();
+            String uygulandi = n.aktifMetinNormalize() ? "Evet (METIN_NORMALIZE)" : "Hayır";
+            String dictAday = TelaffuzNotu.MOD_DICTIONARY.equalsIgnoreCase(mod)
+                    ? "<span class=\"badge warn\">Dictionary adayı</span>" : "";
+            satirlar.append("<tr><td>").append(WebGuvenlikService.htmlKacis(n.id())).append("</td>")
+                    .append("<td>").append(WebGuvenlikService.htmlKacis(n.ifade())).append("</td>")
+                    .append("<td>").append(WebGuvenlikService.htmlKacis(n.onerilenOkunus())).append("</td>")
+                    .append("<td>").append(WebGuvenlikService.htmlKacis(n.durum())).append("</td>")
+                    .append("<td>").append(WebGuvenlikService.htmlKacis(eser)).append("</td>")
+                    .append("<td>").append(WebGuvenlikService.htmlKacis(mod)).append("</td>")
+                    .append("<td>").append(uygulandi).append("</td>")
+                    .append("<td>").append(dictAday).append("</td></tr>");
+        }
+        String govde = """
+                <h2>Telaffuz Notları</h2>
+                <div class="alert">Bu sözlük ileride ElevenLabs pronunciation dictionary veya metin normalizasyonuna aktarılabilir.
+                Canlı dictionary API bu adımda kullanılmaz. Örnek notlar gerçek kullanıcı verisi değildir.</div>
+                <table><thead><tr>
+                  <th>ID</th><th>İfade</th><th>Önerilen okunuş</th><th>Durum</th><th>Eser</th>
+                  <th>Uygulama modu</th><th>Önizlemede uygulanır?</th><th>EL Dictionary</th>
+                </tr></thead><tbody>%s</tbody></table>
+                <h3>JSON</h3><pre>%s</pre>
+                """.formatted(satirlar, WebGuvenlikService.htmlKacis(json));
+        return layout("Telaffuz", "telaffuz", govde);
     }
 
     public static String demo(DemoSayfaVeri v) {
@@ -350,6 +388,15 @@ public final class WebTemplateService {
                 </div>
                 <h2 id="timeline">Demo İlerleme Akışı</h2>
                 %s
+                <h2>Adım 28: Premium Ses Önizleme</h2>
+                <div class="demo-eser-box">
+                  <p>%s</p>
+                  %s
+                  <p><a class="btn secondary" href="/kalite">Kalite paneli</a>
+                     <a class="btn secondary" href="/telaffuz">Telaffuz notları</a>
+                     <a class="btn secondary" href="/eser/5">ESER-00005 plan</a></p>
+                  <div class="alert">Tam eser üretimi bu adımda kapalı — yalnızca onaylı kısa önizleme.</div>
+                </div>
                 <h2>Örnek Eserler</h2>
                 <div class="cards">%s</div>
                 <h2>Önce / Sonra</h2>
@@ -377,7 +424,10 @@ public final class WebTemplateService {
                 v.metrikler().toplamEser(), v.metrikler().ornekEser(),
                 v.metrikler().toplamKarakter(), v.metrikler().toplamTtsParca(),
                 v.metrikler().onizleme(), WebGuvenlikService.htmlKacis(v.metrikler().gitCommit()),
-                timeline, ornekEserler, once, sonra, yapildi, kaldi, uyarilar,
+                timeline,
+                WebGuvenlikService.htmlKacis(v.adim28().krediMesaj()),
+                v.adim28().onizlemeVar() ? v.adim28().audioHtml() : "",
+                ornekEserler, once, sonra, yapildi, kaldi, uyarilar,
                 v.riskler().stream().map(r -> "<li>" + WebGuvenlikService.htmlKacis(r) + "</li>").reduce("", String::concat));
         return layout("Patron Demo", "demo", govde);
     }
@@ -407,6 +457,48 @@ public final class WebTemplateService {
                 WebGuvenlikService.htmlKacis(d.sonOlusturma()),
                 dosyaList);
         return layout("Demo Paketi", "demo", govde);
+    }
+
+    private static String ttsPlanBolumu(WebEserService.WebEserOzeti e,
+                                        TtsMaliyetPlanService.TtsMaliyetPlani plan,
+                                        String nonce) {
+        String onerilen = plan.onerilenAksiyon();
+        String aksiyonMetin = switch (onerilen) {
+            case "ONIZLEME_URETILEBILIR", "ONIZLEME_URETILEBILIR_TAM_ESER_YETERSIZ" -> "Önizleme üret";
+            case "KREDI_BEKLENIYOR" -> "Kredi bekleniyor";
+            case "BUYUK_ESER_MALIYET_ONAYI" -> "Büyük eser: maliyet onayı şart";
+            case "ONIZLEME_ICIN_YETERSIZ_KREDI" -> "Önizleme için kredi yetersiz";
+            default -> plan.aciklama();
+        };
+        String onizForm = "";
+        if (e.eserId() == SesKaliteOlcutleri.KASAGI_ESER_ID && !plan.buyukEser()) {
+            onizForm = """
+                    <form method="post" action="/islemler" style="margin-top:.5rem">
+                      <input type="hidden" name="nonce" value="%s">
+                      <input type="hidden" name="aksiyon" value="elevenlabs-onizleme">
+                      <input type="hidden" name="eserId" value="5">
+                      <button class="btn" type="submit">ElevenLabs önizleme üret</button>
+                    </form>
+                    """.formatted(WebGuvenlikService.htmlKacis(nonce));
+        }
+        return """
+                <div class="demo-eser-box">
+                  <h3>TTS Maliyet Planı (salt okunur)</h3>
+                  <p><strong>Toplam karakter:</strong> %,d · <strong>TTS parça:</strong> %d</p>
+                  <p><strong>Tahmini önizleme:</strong> %d karakter · <strong>Kalan ElevenLabs kredisi:</strong> %d</p>
+                  <p><strong>Tam üretim tahmini:</strong> %d kredi · <strong>Risk:</strong> %s</p>
+                  <p><strong>Önerilen aksiyon:</strong> %s</p>
+                  <p>%s</p>
+                  %s
+                  <p><a class="btn secondary" href="/api/tts-plan/%d">JSON plan</a></p>
+                </div>
+                """.formatted(
+                plan.toplamKarakter(), plan.ttsParca(), plan.tahminiOnizlemeKarakteri(),
+                plan.kalanElevenLabsKredisi(), plan.tamUretimTahminiKredi(),
+                plan.buyukEser() ? "yüksek" : "düşük",
+                WebGuvenlikService.htmlKacis(aksiyonMetin),
+                WebGuvenlikService.htmlKacis(plan.aciklama()),
+                onizForm, e.eserId());
     }
 
     private static String demoEserBolumu(WebEserService.WebEserOzeti e) {
@@ -445,13 +537,17 @@ public final class WebTemplateService {
         };
     }
 
+    public record Adim28Bolum(boolean krediVar, boolean onizlemeVar, String krediMesaj, String audioHtml) {
+    }
+
     public record DemoSayfaVeri(
             String degerOnerisi, String simulasyonNotu,
             DemoMetrikService.DemoMetrikler metrikler,
             List<DemoAdimi> adimlar, List<DemoSenaryo> senaryolar,
             DemoDegerOnerisiService.OnceSonra onceSonra,
             DemoDegerOnerisiService.YapildiKaldi yapildiKaldi,
-            List<String> uyarilar, List<String> riskler
+            List<String> uyarilar, List<String> riskler,
+            Adim28Bolum adim28
     ) {
     }
 

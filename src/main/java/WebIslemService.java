@@ -2,7 +2,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
-import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,6 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * Güvenli web işlemleri — yalnızca Java servis çağrıları, shell yok.
  */
 public final class WebIslemService {
+    private static final int IZINLI_ONIZLEME_ESER = SesKaliteOlcutleri.KASAGI_ESER_ID;
+
     private final WebOrtam ortam;
     private final WebKalitePanelService kalitePanel;
     private final ConcurrentHashMap<String, Long> nonceDeposu = new ConcurrentHashMap<>();
@@ -38,15 +40,59 @@ public final class WebIslemService {
     }
 
     public WebIslemSonucu islem(String aksiyon) throws Exception {
-        return switch (aksiyon == null ? "" : aksiyon.trim().toLowerCase()) {
+        return islem(aksiyon, Map.of());
+    }
+
+    public WebIslemSonucu islem(String aksiyon, Map<String, String> form) throws Exception {
+        String ad = aksiyon == null ? "" : aksiyon.trim().toLowerCase(Locale.ROOT);
+        return switch (ad) {
             case "kalite-yenile" -> {
                 kalitePanel.yenile();
                 yield WebIslemSonucu.basarili("Kalite paneli yeniden oluşturuldu.", "/kalite");
             }
             case "sistem-yenile" -> WebIslemSonucu.basarili("Sistem durumu yenilendi.", "/sistem");
             case "eser-tara" -> WebIslemSonucu.basarili("Eser listesi güncellendi.", "/eserler");
+            case "elevenlabs-onizleme" -> elevenLabsOnizleme(form);
             default -> WebIslemSonucu.hatali("Bilinmeyen işlem: " + aksiyon);
         };
+    }
+
+    private WebIslemSonucu elevenLabsOnizleme(Map<String, String> form) throws Exception {
+        int eserId = parseEserId(form.get("eserId"));
+        if (eserId <= 0) {
+            eserId = IZINLI_ONIZLEME_ESER;
+        }
+        if (eserId == SesKaliteOlcutleri.ASTRONOMI_ESER_ID) {
+            return WebIslemSonucu.hatali(
+                    "ESER-00006 büyük eser — önce manuel maliyet planı ve onay gerekir. Web önizlemesi engellendi.");
+        }
+        if (eserId != IZINLI_ONIZLEME_ESER) {
+            return WebIslemSonucu.hatali("Web önizlemesi yalnızca ESER-00005 (Kaşağı) için açıktır.");
+        }
+
+        ElevenLabsOnizlemeService.OnizlemeSonucu sonuc = ElevenLabsOnizlemeService.uret(
+                eserId, ortam.metinArsivi(), ortam.sesArsivi(), ortam.kalitePanel(), null, null);
+
+        if (!sonuc.basarili()) {
+            return WebIslemSonucu.hatali(sonuc.mesaj());
+        }
+
+        kalitePanel.yenile();
+        String mesaj = sonuc.mevcutKullanildi()
+                ? "Mevcut ElevenLabs önizlemesi kullanıldı; kalite paneli yenilendi."
+                : "ElevenLabs önizlemesi üretildi; kalite paneli yenilendi.";
+        return WebIslemSonucu.basarili(mesaj, "/eser/" + eserId);
+    }
+
+    private static int parseEserId(String ham) {
+        if (ham == null || ham.isBlank()) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(ham.trim().replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     public void klasorleriHazirla() throws Exception {

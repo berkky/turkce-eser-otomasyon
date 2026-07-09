@@ -1,5 +1,12 @@
 # Değişiklik Günlüğü
 
+## 28.0.0 — ElevenLabs önizleme, telaffuz ve maliyet planı
+- Güvenli ElevenLabs kısa önizleme (ESER-00005, kredi/idempotent koruma).
+- `TelaffuzSozluguService`, `TelaffuzNormalizerService`, `TtsMaliyetPlanService`.
+- Web: `POST elevenlabs-onizleme`, `/api/tts-plan/{id}`, `/api/telaffuz`, `/api/elevenlabs/status`.
+- Demo Adım 28 bölümü; patron paketi güncellendi.
+- `ADIM_28_MIMARI.md`, `adim28-self-test.ps1`, `Adim28Dogrulama.java`.
+
 ## 27.0.0 — Patron demo akışı ve sunum modu
 - `/demo` patron demo sayfası: timeline, metrikler, önce/sonra, güvenlik uyarıları.
 - Demo API: `/api/demo`, `/api/demo/metrikler`, `/api/demo/akis`.

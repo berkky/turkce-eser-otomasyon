@@ -1,4 +1,4 @@
-# Proje Durumu — Adım 27
+# Proje Durumu — Adım 28
 
 ## Tamamlanan çekirdekler
 
@@ -7,16 +7,18 @@
 - Metadata güvenlik/kurtarma
 - Ses kalite paneli
 - Yerel web MVP (localhost:8787)
-- **Patron demo akışı ve sunum modu**
+- Patron demo akışı ve sunum modu
+- **ElevenLabs canlı önizleme, telaffuz sözlüğü, maliyet planı**
 
 ## Doğrulama
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\adim27-self-test.ps1
+powershell -ExecutionPolicy Bypass -File .\adim28-self-test.ps1
+powershell -ExecutionPolicy Bypass -File .\elevenlabs-durum.ps1
 powershell -ExecutionPolicy Bypass -File .\patron-demo-paketi.ps1
 powershell -ExecutionPolicy Bypass -File .\web-panel.ps1
 ```
 
-## Sonraki adım (28)
+## Sonraki adım (29)
 
-Onaylı canlı ElevenLabs önizleme, demo canlı metrik yenileme.
+Forced alignment, onaylı tam eser üretim akışı.
