@@ -30,7 +30,7 @@ public final class WebTemplateService {
                   <main>
                     %s
                   </main>
-                  <footer>Eser Otomasyon · Adım 26 · API anahtarları asla gösterilmez</footer>
+                  <footer>Eser Otomasyon · Adım 27 · API anahtarları asla gösterilmez</footer>
                   <script src="/assets/app.js"></script>
                 </body>
                 </html>
@@ -40,6 +40,7 @@ public final class WebTemplateService {
     private static String nav(String aktif) {
         String[][] linkler = {
                 {"/", "ana", "Ana Sayfa"},
+                {"/demo", "demo", "Patron Demo"},
                 {"/eserler", "eserler", "Eserler"},
                 {"/kalite", "kalite", "Ses Kalite"},
                 {"/sistem", "sistem", "Sistem"},
@@ -75,7 +76,8 @@ public final class WebTemplateService {
                 </div>
                 <div class="alert">Tam eser ses üretimi bu panelden başlatılamaz. Yalnızca önizleme ve izleme.</div>
                 <p>
-                  <a class="btn" href="/eserler">Eserleri görüntüle</a>
+                  <a class="btn" href="/demo">Patron Demo</a>
+                  <a class="btn secondary" href="/eserler">Eserleri görüntüle</a>
                   <a class="btn secondary" href="/kalite">Kalite paneli</a>
                   <a class="btn secondary" href="/sistem">Sistem durumu</a>
                 </p>
@@ -145,8 +147,10 @@ public final class WebTemplateService {
                 ? "<a class=\"btn secondary\" href=\"/media/file?tip=pdf&eser=" + e.eserId() + "\">Kaynak PDF</a>" : "";
         String metaLink = d.metadataJson() != null
                 ? "<a class=\"btn secondary\" href=\"/media/file?tip=meta&eser=" + e.eserId() + "\">Metadata JSON</a>" : "";
+        String demoBolum = demoEserBolumu(e);
         String govde = """
                 <h2>ESER-%s — %s</h2>
+                %s
                 %s
                 <div class="cards">
                   <div class="card"><span>Yazar</span><strong style="font-size:1rem">%s</strong></div>
@@ -161,7 +165,7 @@ public final class WebTemplateService {
                 <h3>Önizlemeler</h3><ul>%s</ul>
                 <h3>Metin özeti</h3><pre>%s</pre>
                 """.formatted(
-                String.format("%05d", e.eserId()), WebGuvenlikService.htmlKacis(e.eserAdi()), buyukUyari,
+                String.format("%05d", e.eserId()), WebGuvenlikService.htmlKacis(e.eserAdi()), buyukUyari, demoBolum,
                 WebGuvenlikService.htmlKacis(e.yazar()), WebGuvenlikService.htmlKacis(e.metadataDurumu()),
                 e.ttsParca(), e.karakter(), WebGuvenlikService.htmlKacis(e.isbn()),
                 WebGuvenlikService.htmlKacis(e.yayinevi()), WebGuvenlikService.htmlKacis(d.kanit()),
@@ -280,6 +284,175 @@ public final class WebTemplateService {
     public static String telaffuz(String json) {
         return layout("Telaffuz", "telaffuz", "<h2>Telaffuz Notları</h2><pre>"
                 + WebGuvenlikService.htmlKacis(json) + "</pre><p>Canlı pronunciation API bu adımda kullanılmaz.</p>");
+    }
+
+    public static String demo(DemoSayfaVeri v) {
+        StringBuilder timeline = new StringBuilder("<div class=\"timeline\">");
+        for (DemoAdimi a : v.adimlar()) {
+            String badgeCls = badgeSinif(a.durum());
+            String link = a.link().startsWith("http") ? a.link()
+                    : "<a href=\"" + WebGuvenlikService.htmlKacis(a.link()) + "\">Detay</a>";
+            timeline.append("<div class=\"tl-step\">")
+                    .append("<div class=\"tl-num\">").append(a.sira()).append("</div>")
+                    .append("<div class=\"tl-body\"><span class=\"badge ").append(badgeCls).append("\">")
+                    .append(WebGuvenlikService.htmlKacis(a.durum())).append("</span>")
+                    .append("<h3>").append(WebGuvenlikService.htmlKacis(a.baslik())).append("</h3>")
+                    .append("<p>").append(WebGuvenlikService.htmlKacis(a.aciklama())).append("</p>")
+                    .append("<p class=\"tl-kanit\"><em>").append(WebGuvenlikService.htmlKacis(a.kanit())).append("</em> · ")
+                    .append(link).append("</p></div></div>");
+        }
+        timeline.append("</div>");
+
+        StringBuilder ornekEserler = new StringBuilder();
+        for (DemoSenaryo s : v.senaryolar()) {
+            ornekEserler.append("<div class=\"card\"><h3>ESER-").append(String.format("%05d", s.eserId()))
+                    .append(" — ").append(WebGuvenlikService.htmlKacis(s.eserAdi())).append("</h3>")
+                    .append("<p>").append(WebGuvenlikService.htmlKacis(s.demoRolu())).append("</p>")
+                    .append("<p><strong>Kaynak:</strong> ").append(WebGuvenlikService.htmlKacis(s.kaynakTipi()))
+                    .append("</p><a class=\"btn secondary\" href=\"/eser/").append(s.eserId()).append("\">Detay</a></div>");
+        }
+
+        StringBuilder once = new StringBuilder("<ul>");
+        v.onceSonra().once().forEach(o -> once.append("<li>").append(WebGuvenlikService.htmlKacis(o)).append("</li>"));
+        once.append("</ul>");
+        StringBuilder sonra = new StringBuilder("<ul>");
+        v.onceSonra().sonra().forEach(s -> sonra.append("<li>").append(WebGuvenlikService.htmlKacis(s)).append("</li>"));
+        sonra.append("</ul>");
+
+        StringBuilder yapildi = new StringBuilder("<ul>");
+        v.yapildiKaldi().yapildi().forEach(y -> yapildi.append("<li class=\"ok-li\">").append(WebGuvenlikService.htmlKacis(y)).append("</li>"));
+        yapildi.append("</ul>");
+        StringBuilder kaldi = new StringBuilder("<ul>");
+        v.yapildiKaldi().kaldi().forEach(k -> kaldi.append("<li>").append(WebGuvenlikService.htmlKacis(k)).append("</li>"));
+        kaldi.append("</ul>");
+
+        StringBuilder uyarilar = new StringBuilder();
+        v.uyarilar().forEach(u -> uyarilar.append("<div class=\"alert\">").append(WebGuvenlikService.htmlKacis(u)).append("</div>"));
+
+        String govde = """
+                <div class="demo-hero">
+                  <h2>Türkçe Eser Otomasyonu</h2>
+                  <p class="demo-tagline">%s</p>
+                  <p class="demo-sim">%s</p>
+                  <p>
+                    <a class="btn" href="#timeline">Demo Akışını Gör</a>
+                    <a class="btn secondary" href="/demo/paket">Sunum Paketi</a>
+                    <a class="btn secondary" href="%s" target="_blank" rel="noopener">GitHub</a>
+                  </p>
+                </div>
+                <div class="cards">
+                  <div class="card"><span>Toplam eser</span><strong>%d</strong></div>
+                  <div class="card"><span>Demo örnek</span><strong>%d</strong></div>
+                  <div class="card"><span>Karakter</span><strong>%,d</strong></div>
+                  <div class="card"><span>TTS parça</span><strong>%d</strong></div>
+                  <div class="card"><span>Önizleme</span><strong>%d</strong></div>
+                  <div class="card"><span>Git commit</span><strong style="font-size:1rem">%s</strong></div>
+                </div>
+                <h2 id="timeline">Demo İlerleme Akışı</h2>
+                %s
+                <h2>Örnek Eserler</h2>
+                <div class="cards">%s</div>
+                <h2>Önce / Sonra</h2>
+                <div class="before-after"><div><h3>Önce</h3>%s</div><div><h3>Sonra</h3>%s</div></div>
+                <h2>Ne Yapıldı / Ne Kaldı</h2>
+                <div class="before-after"><div><h3>Yapıldı</h3>%s</div><div><h3>Kaldı</h3>%s</div></div>
+                <h2>Hızlı Bağlantılar</h2>
+                <p>
+                  <a class="btn secondary" href="/eserler">Eserler</a>
+                  <a class="btn secondary" href="/eser/5">ESER-00005</a>
+                  <a class="btn secondary" href="/eser/6">ESER-00006</a>
+                  <a class="btn secondary" href="/kalite">Kalite</a>
+                  <a class="btn secondary" href="/sistem">Sistem</a>
+                  <a class="btn secondary" href="/docs">Docs</a>
+                  <a class="btn secondary" href="/telaffuz">Telaffuz</a>
+                </p>
+                <h2>Güvenlik ve Riskler</h2>
+                %s
+                <h2>Sonraki Adımlar</h2>
+                <ul>%s</ul>
+                """.formatted(
+                WebGuvenlikService.htmlKacis(v.degerOnerisi()),
+                WebGuvenlikService.htmlKacis(v.simulasyonNotu()),
+                DemoGuvenlikService.GITHUB_URL,
+                v.metrikler().toplamEser(), v.metrikler().ornekEser(),
+                v.metrikler().toplamKarakter(), v.metrikler().toplamTtsParca(),
+                v.metrikler().onizleme(), WebGuvenlikService.htmlKacis(v.metrikler().gitCommit()),
+                timeline, ornekEserler, once, sonra, yapildi, kaldi, uyarilar,
+                v.riskler().stream().map(r -> "<li>" + WebGuvenlikService.htmlKacis(r) + "</li>").reduce("", String::concat));
+        return layout("Patron Demo", "demo", govde);
+    }
+
+    public static String demoPaket(DemoRaporService.PaketDurumu d) {
+        StringBuilder dosyaList = new StringBuilder("<ul>");
+        for (String bek : d.beklenen()) {
+            boolean var = d.dosyalar().contains(bek);
+            String badge = var ? "<span class=\"badge ok\">VAR</span>" : "<span class=\"badge bad\">YOK</span>";
+            dosyaList.append("<li>").append(badge).append(" ")
+                    .append(WebGuvenlikService.htmlKacis(bek)).append("</li>");
+        }
+        dosyaList.append("</ul>");
+        String govde = """
+                <h2>Patron Sunum Paketi</h2>
+                <p><strong>Klasör:</strong> %s</p>
+                <p><strong>Durum:</strong> %s</p>
+                <p><strong>Son güncelleme:</strong> %s</p>
+                <h3>Dosyalar</h3>
+                %s
+                <div class="alert">Paket oluşturmak için proje klasöründe şu komutu çalıştırın:<br>
+                <code>powershell -ExecutionPolicy Bypass -File .\\patron-demo-paketi.ps1</code></div>
+                <p><a class="btn" href="/demo">Demo sayfasına dön</a></p>
+                """.formatted(
+                WebGuvenlikService.htmlKacis(WebGuvenlikService.yolMaskele(d.klasor())),
+                d.mevcut() ? "Paket klasörü mevcut" : "Henüz oluşturulmadı",
+                WebGuvenlikService.htmlKacis(d.sonOlusturma()),
+                dosyaList);
+        return layout("Demo Paketi", "demo", govde);
+    }
+
+    private static String demoEserBolumu(WebEserService.WebEserOzeti e) {
+        if (e.eserId() != SesKaliteOlcutleri.KASAGI_ESER_ID
+                && e.eserId() != SesKaliteOlcutleri.ASTRONOMI_ESER_ID) {
+            return "";
+        }
+        DemoSenaryo s = e.eserId() == SesKaliteOlcutleri.KASAGI_ESER_ID
+                ? DemoSenaryo.kasagi() : DemoSenaryo.astronomi();
+        String uretimPlani = e.buyukEser()
+                ? "Tam üretim kapalı — önce önizleme ve maliyet onayı gerekir. Tahmini yüksek kredi riski."
+                : "Kısa eser — önizleme ile sağlayıcı seçimi yapılabilir. Tam üretim web panelinden başlatılamaz.";
+        return """
+                <div class="demo-eser-box">
+                  <h3>Demo Eseri</h3>
+                  <p><strong>Bu eser demo için neden önemli?</strong> %s</p>
+                  <p><strong>Tam üretim koruması:</strong> %s</p>
+                  <p><strong>Metadata güvenlik:</strong> %s</p>
+                  <p><strong>TTS üretim planı (salt okunur):</strong> %s</p>
+                  <a class="btn secondary" href="/demo">Patron demo akışı</a>
+                </div>
+                """.formatted(
+                WebGuvenlikService.htmlKacis(s.onemAciklamasi()),
+                e.buyukEser() ? "Büyük eser — otomatik tam üretim engelli" : "Kısa eser — düşük maliyetli test",
+                WebGuvenlikService.htmlKacis(e.metadataDurumu()),
+                WebGuvenlikService.htmlKacis(uretimPlani));
+    }
+
+    private static String badgeSinif(String durum) {
+        if (durum == null) return "";
+        return switch (durum) {
+            case DemoAdimi.DURUM_TAMAMLANDI -> "ok";
+            case DemoAdimi.DURUM_KONTROL -> "warn";
+            case DemoAdimi.DURUM_KREDI -> "warn";
+            default -> "";
+        };
+    }
+
+    public record DemoSayfaVeri(
+            String degerOnerisi, String simulasyonNotu,
+            DemoMetrikService.DemoMetrikler metrikler,
+            List<DemoAdimi> adimlar, List<DemoSenaryo> senaryolar,
+            DemoDegerOnerisiService.OnceSonra onceSonra,
+            DemoDegerOnerisiService.YapildiKaldi yapildiKaldi,
+            List<String> uyarilar, List<String> riskler
+    ) {
     }
 
     public record DashboardVeri(String guncelleme, int toplamEser, int metadataHazir, int kontrolGerek,

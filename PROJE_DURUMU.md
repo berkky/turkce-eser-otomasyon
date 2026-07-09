@@ -1,21 +1,22 @@
-# Proje Durumu — Adım 26
+# Proje Durumu — Adım 27
 
 ## Tamamlanan çekirdekler
 
-- Kaynak alımı, Archive.org, arşiv, Excel, TTS kuyruğu
-- Piper, Google Chirp, ElevenLabs entegrasyonu
-- ElevenLabs kredi kontrolü, önizleme, mock mod
-- Metadata güvenlik ve kurtarma
-- Ses önizleme kalite paneli (statik HTML)
-- **Yerel web MVP kontrol paneli (localhost:8787)**
+- Kaynak alımı, arşiv, metadata, TTS kuyruğu
+- Piper, Google Chirp, ElevenLabs altyapısı
+- Metadata güvenlik/kurtarma
+- Ses kalite paneli
+- Yerel web MVP (localhost:8787)
+- **Patron demo akışı ve sunum modu**
 
 ## Doğrulama
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\adim26-self-test.ps1
+powershell -ExecutionPolicy Bypass -File .\adim27-self-test.ps1
+powershell -ExecutionPolicy Bypass -File .\patron-demo-paketi.ps1
 powershell -ExecutionPolicy Bypass -File .\web-panel.ps1
 ```
 
-## Sonraki adım (27)
+## Sonraki adım (28)
 
-Web panelden onaylı canlı önizleme, telaffuz sözlüğü düzenleme, kuyruk canlı izleme.
+Onaylı canlı ElevenLabs önizleme, demo canlı metrik yenileme.

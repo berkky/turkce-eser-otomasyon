@@ -34,6 +34,13 @@ function Write-TestBaslik([string]$Anahtar) {
         'adim24derleme' = '--- ADIM 24 MAVEN DERLEME ---'
         'adim25' = '--- ADIM 25 SES KALİTE PANELİ DOĞRULAMA ---'
         'adim25derleme' = '--- ADIM 25 MAVEN DERLEME ---'
+        'adim26' = '--- ADIM 26 WEB PANEL DOĞRULAMA ---'
+        'adim26derleme' = '--- ADIM 26 MAVEN DERLEME ---'
+        'adim27' = '--- ADIM 27 PATRON DEMO DOĞRULAMA ---'
+        'adim27derleme' = '--- ADIM 27 MAVEN DERLEME ---'
+        'adim27selftestOk' = 'ADIM 27 SELF-TEST: BAŞARILI'
+        'adim27selftestFail' = 'ADIM 27 SELF-TEST: BAŞARISIZ'
+        'patronDemoPaketi' = '--- PATRON DEMO PAKETİ ---'
         'panel' = '--- SES KALİTE PANELİ ---'
         'panelNot' = 'Not: Gerçek ElevenLabs API çağrısı yapılmaz.'
         'demo' = '--- KALİTE PANELİ DEMO VERİSİ ---'
@@ -42,5 +49,34 @@ function Write-TestBaslik([string]$Anahtar) {
         Write-Utf8Line $map[$Anahtar]
     } else {
         Write-Utf8Line $Anahtar
+    }
+}
+
+function Invoke-MavenExecTimeout {
+    param(
+        [Parameter(Mandatory = $true)][string]$Maven,
+        [Parameter(Mandatory = $true)][string]$MainClass,
+        [string]$StepLabel = $MainClass,
+        [int]$TimeoutSeconds = 300
+    )
+    Write-TestBaslik $StepLabel
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = $Maven
+    $psi.Arguments = "-q `"-Dexec.mainClass=$MainClass`" exec:java"
+    $psi.WorkingDirectory = $PSScriptRoot
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $proc = [System.Diagnostics.Process]::Start($psi)
+    if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) {
+        try { $proc.Kill($true) } catch { }
+        throw "TIMEOUT (${TimeoutSeconds}s): $StepLabel ($MainClass)"
+    }
+    $out = $proc.StandardOutput.ReadToEnd()
+    $err = $proc.StandardError.ReadToEnd()
+    if ($out) { Write-Utf8Line $out.TrimEnd() }
+    if ($err) { Write-Utf8Line $err.TrimEnd() }
+    if ($proc.ExitCode -ne 0) {
+        throw "HATA (exit $($proc.ExitCode)): $StepLabel ($MainClass)"
     }
 }

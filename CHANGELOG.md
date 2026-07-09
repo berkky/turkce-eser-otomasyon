@@ -1,5 +1,12 @@
 # Değişiklik Günlüğü
 
+## 27.0.0 — Patron demo akışı ve sunum modu
+- `/demo` patron demo sayfası: timeline, metrikler, önce/sonra, güvenlik uyarıları.
+- Demo API: `/api/demo`, `/api/demo/metrikler`, `/api/demo/akis`.
+- `patron-demo-paketi.ps1` ile masaüstü sunum paketi üretimi.
+- ESER-00005/00006 demo rol açıklamaları eser detay sayfasında.
+- `DEMO_SENARYOSU.md`, `IS_MODELI_NOTU.md`, `ADIM_27_MIMARI.md` eklendi.
+
 ## 26.0.0 — Yerel web MVP kontrol paneli
 - Localhost web paneli eklendi (`YerelWebSunucuApp`, port 8787).
 - Dashboard, eser listesi/detay, kalite, sistem, kuyruk, dokümantasyon sayfaları eklendi.

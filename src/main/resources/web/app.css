@@ -27,4 +27,17 @@ th{background:#121a24;color:#9aa8bc;font-size:.85rem}
 pre{background:#0d1218;padding:1rem;border-radius:8px;overflow:auto;white-space:pre-wrap;font-size:.85rem}
 audio{width:100%;margin:.5rem 0}
 footer{padding:1rem 1.5rem;color:#9aa8bc;font-size:.85rem;border-top:1px solid #2a3548;text-align:center}
-@media(max-width:640px){main{padding:1rem}table{font-size:.85rem}}
+.timeline{margin:1.5rem 0}
+.tl-step{display:flex;gap:1rem;margin:1rem 0;align-items:flex-start}
+.tl-num{flex-shrink:0;width:2rem;height:2rem;background:#4da3ff;color:#0f1419;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
+.tl-body{flex:1;background:#1a2332;border-radius:8px;padding:.75rem 1rem}
+.tl-kanit{font-size:.85rem;color:#9aa8bc;margin:.5rem 0 0}
+.demo-hero{background:linear-gradient(135deg,#1a2332,#121a24);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;border:1px solid #2a3548}
+.demo-tagline{font-size:1.1rem;color:#9aa8bc;margin:.5rem 0 1rem}
+.demo-sim{color:#ffb020;font-size:.9rem}
+.before-after{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0}
+.before-after ul{margin:.5rem 0;padding-left:1.25rem}
+.demo-eser-box{background:#1a2332;border-left:4px solid #ffb020;border-radius:8px;padding:1rem;margin:1rem 0}
+.ok-li{color:#3dd68c}
+.badge.bad{background:#3a1a1a;color:#ff6b6b}
+@media(max-width:640px){main{padding:1rem}table{font-size:.85rem}.before-after{grid-template-columns:1fr}}

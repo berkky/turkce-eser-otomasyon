@@ -14,7 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Localhost-only HTTP sunucusu.
@@ -23,31 +25,61 @@ public final class YerelWebSunucu {
     private final WebOrtam ortam;
     private final WebKalitePanelService kalitePanel;
     private final WebIslemService islemService;
+    private final DemoAkisService demoAkis;
+    private final DemoMetrikService demoMetrik;
+    private final DemoRaporService demoRapor;
     private final ObjectMapper json = new ObjectMapper();
     private HttpServer sunucu;
+    private ExecutorService executor;
 
     public YerelWebSunucu(WebOrtam ortam) throws Exception {
         this.ortam = ortam;
         this.kalitePanel = new WebKalitePanelService(ortam);
         this.islemService = new WebIslemService(ortam, kalitePanel);
+        this.demoAkis = new DemoAkisService(ortam);
+        this.demoMetrik = new DemoMetrikService(ortam);
+        this.demoRapor = new DemoRaporService(ortam);
         islemService.klasorleriHazirla();
         kalitePanel.yenile();
     }
 
     public void baslat(int port) throws IOException {
+        durdur();
         sunucu = HttpServer.create(new InetSocketAddress(WebOrtam.HOST, port), 0);
         sunucu.createContext("/", this::handle);
-        sunucu.setExecutor(Executors.newFixedThreadPool(4));
+        executor = Executors.newFixedThreadPool(4, r -> {
+            Thread t = new Thread(r, "yerel-web-panel");
+            t.setDaemon(true);
+            return t;
+        });
+        sunucu.setExecutor(executor);
         sunucu.start();
     }
 
     public void durdur() {
         if (sunucu != null) {
-            sunucu.stop(0);
+            sunucu.stop(1);
+            sunucu = null;
+        }
+        if (executor != null) {
+            executor.shutdownNow();
+            try {
+                executor.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            executor = null;
         }
     }
 
+    public boolean calisiyor() {
+        return sunucu != null;
+    }
+
     public int port() {
+        if (sunucu == null) {
+            throw new IllegalStateException("Sunucu çalışmıyor");
+        }
         return sunucu.getAddress().getPort();
     }
 
@@ -80,6 +112,15 @@ public final class YerelWebSunucu {
         }
         if (path.equals("/api/kuyruk") && "GET".equals(method)) {
             return WebResponse.jsonOk(kuyrukJson());
+        }
+        if (path.equals("/api/demo") && "GET".equals(method)) {
+            return WebResponse.jsonOk(demoAkis.json());
+        }
+        if (path.equals("/api/demo/metrikler") && "GET".equals(method)) {
+            return WebResponse.jsonOk(demoMetrik.json());
+        }
+        if (path.equals("/api/demo/akis") && "GET".equals(method)) {
+            return WebResponse.jsonOk(demoAkis.akisJson());
         }
         if ("POST".equals(method) && path.equals("/islemler")) {
             return postIslem(body);
@@ -116,8 +157,8 @@ public final class YerelWebSunucu {
         }
         if (path.equals("/docs")) {
             return WebResponse.htmlOk(WebTemplateService.docs(List.of(
-                    "README.md", "PROJE_DURUMU.md", "ADIM_25_MIMARI.md", "ADIM_26_MIMARI.md",
-                    "TTS_ARASTIRMA_VE_YOL_HARITASI.md")));
+                    "README.md", "PROJE_DURUMU.md", "ADIM_26_MIMARI.md", "ADIM_27_MIMARI.md",
+                    "DEMO_SENARYOSU.md", "IS_MODELI_NOTU.md", "TTS_ARASTIRMA_VE_YOL_HARITASI.md")));
         }
         if (path.startsWith("/docs/")) {
             String ad = path.substring("/docs/".length());
@@ -125,6 +166,12 @@ public final class YerelWebSunucu {
         }
         if (path.equals("/telaffuz")) {
             return WebResponse.htmlOk(WebTemplateService.telaffuz(kalitePanel.telaffuzJson()));
+        }
+        if (path.equals("/demo")) {
+            return WebResponse.htmlOk(demoSayfa());
+        }
+        if (path.equals("/demo/paket")) {
+            return WebResponse.htmlOk(WebTemplateService.demoPaket(demoRapor.durum()));
         }
         return WebResponse.notFound("Sayfa bulunamadı");
     }
@@ -223,6 +270,21 @@ public final class YerelWebSunucu {
                 OffsetDateTime.now().toString(), eserler.size(), hazir, kontrol,
                 ttsHazir, ttsTamam, oniz, buyuk, el.ttsDurumu(),
                 s.piper() ? "HAZIR" : "KAPALI", s.ffmpeg(), s.excelVar());
+    }
+
+    private String demoSayfa() throws Exception {
+        var veri = new WebTemplateService.DemoSayfaVeri(
+                DemoDegerOnerisiService.DEGER_ONERISI,
+                DemoGuvenlikService.simulasyonNotu(),
+                demoMetrik.hesapla(),
+                demoAkis.adimlar(),
+                demoAkis.senaryolar(),
+                DemoDegerOnerisiService.onceSonra(),
+                DemoDegerOnerisiService.yapildiKaldi(),
+                DemoGuvenlikService.uyarilar(),
+                DemoDegerOnerisiService.risklerVeSonraki()
+        );
+        return WebTemplateService.demo(veri);
     }
 
     private String statusJson() throws Exception {

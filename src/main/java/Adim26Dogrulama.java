@@ -36,9 +36,15 @@ public final class Adim26Dogrulama {
             guvenlikTestleri(sunucu);
 
             sunucu.baslat(0);
-            int port = sunucu.port();
-            httpTestleri(port);
-            sunucu.durdur();
+            try {
+                httpTestleri(sunucu.port());
+            } finally {
+                sunucu.durdur();
+            }
+            if (sunucu.calisiyor()) {
+                hata("HttpServer test sonrası kapanmadı");
+            }
+            System.out.println("OK: HttpServer ve executor kapatıldı");
 
             gercekArsivTestleri();
 

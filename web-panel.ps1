@@ -12,6 +12,7 @@ Write-Utf8Line "========================================"
 Write-Utf8Line "YEREL WEB MVP KONTROL PANELİ"
 Write-Utf8Line "========================================"
 Write-Utf8Line "URL: http://127.0.0.1:8787"
+Write-Utf8Line "Demo: http://127.0.0.1:8787/demo"
 Write-Utf8Line "Durdurmak için Ctrl+C"
 Write-Utf8Line ""
 
