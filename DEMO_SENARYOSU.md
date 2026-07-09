@@ -41,16 +41,32 @@
 - Telaffuz sözlüğü tablosu (`METIN_NORMALIZE` / dictionary adayı)
 - `/api/tts-plan/5` — salt okunur maliyet planı
 
-### 5. Güvenlik ve ürünleşme (60 sn) — `/sistem` veya `/demo` güvenlik bölümü
+### 5. Adım 29 — Okuma takibi (60 sn) — `/eser/5/alignment`
+
+> "Kitabı dinlerken metin takip edilebilir — forced alignment ile segment zamanlaması üretiyoruz."
+
+**Gerçek önizleme yoksa** (sık durum):
+> "Gerçek ElevenLabs preview olmadan gerçek alignment yapılamaz. Patron demosu için DemoFixture ile mock altyazı üretiyoruz — bu gerçek üretim değil."
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\elevenlabs-alignment.ps1 -EserId 5 -Mock -DemoFixture
+```
+
+- Sonra `/api/alignment/5/subtitles?format=vtt` → `WEBVTT` çıktısı
+- `/eser/5/alignment` → "Demo fixture alignment" uyarısı görünür
+- Segment listesi + SRT/VTT export linkleri
+- Kredi yoksa: "Gerçek API beklemede; mock demo ile akışı gösteriyoruz"
+
+### 6. Güvenlik ve ürünleşme (60 sn) — `/sistem` veya `/demo` güvenlik bölümü
 
 - Localhost only, API anahtarları gizli
 - Metadata KONTROL_GEREKIYOR = güvenlik bilinçli tasarım
 - GitHub: https://github.com/berkky/turkce-eser-otomasyon
 
-### 6. Kapanış (30 sn)
+### 7. Kapanış (30 sn)
 
 - Önce/sonra karşılaştırması
-- Sonraki adım: forced alignment (Adım 29)
+- Sonraki adım: onaylı tam eser üretimi (Adım 30)
 - **DUR:** Soru-cevap
 
 ## ElevenLabs Kredisi Yoksa

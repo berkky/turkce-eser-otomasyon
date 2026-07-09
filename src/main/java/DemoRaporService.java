@@ -96,6 +96,13 @@ public final class DemoRaporService {
         sb.append("- Telaffuz sözlüğü: yerel JSON + METIN_NORMALIZE\n");
         sb.append("- Tam eser üretimi: KAPALI (web panelinden başlatılamaz)\n");
         sb.append("- Büyük eser (ESER-00006): maliyet onayı şart\n\n");
+        sb.append("## Adım 29 — Forced Alignment ve Okuma Takibi\n\n");
+        sb.append("- Alignment klasörü: ses-arsivi/_alignment/\n");
+        sb.append("- Çıktılar: alignment.json, .srt, .vtt, summary.json\n");
+        sb.append("- Mock alignment: patron demo için kitabı dinlerken metin takibi\n");
+        sb.append("- DemoFixture: gercek onizleme yoksa mock altyazi (ses-arsivi/_alignment/_fixture/)\n");
+        sb.append("- Gercek alignment icin once gercek ElevenLabs preview MP3 gerekir\n");
+        sb.append("- Gerçek API: yalnızca -GercekApiOnayli ve kredi ile (varsayılan kapalı)\n\n");
         sb.append("## Demo Akışı (7 adım)\n\n");
         for (DemoAdimi a : adimlar) {
             sb.append(a.sira()).append(". **").append(a.baslik()).append("** [").append(a.durum()).append("]\n");
@@ -195,7 +202,7 @@ public final class DemoRaporService {
                 - Derleme: `mvn -q -DskipTests compile`
                 - Web panel: `powershell -ExecutionPolicy Bypass -File .\\web-panel.ps1`
                 - Demo sayfası: http://127.0.0.1:8787/demo
-                - Self-test: `powershell -ExecutionPolicy Bypass -File .\\adim28-self-test.ps1`
+                - Self-test: `powershell -ExecutionPolicy Bypass -File .\\adim29-self-test.ps1`
                 - Demo paketi: `powershell -ExecutionPolicy Bypass -File .\\patron-demo-paketi.ps1`
                 
                 API anahtarları ortam değişkenlerinden okunur; hiçbir ekranda gösterilmez.

@@ -49,12 +49,13 @@ public final class DemoDegerOnerisiService {
                         "Önizleme, mock mod ve kredi kontrolü",
                         "Kalite paneli ve web MVP",
                         "Telaffuz sözlüğü ve maliyet planı (Adım 28)",
+                        "Mock forced alignment ve okuma takibi (Adım 29)",
                         "GitHub kayıtlı açık kaynak proje"
                 ),
                 List.of(
                         "Canlı ElevenLabs tam eser üretimi (onaylı)",
                         "Telaffuz sözlüğü düzenleme UI (canlı)",
-                        "Forced alignment ve altyazı",
+                        "Gerçek ElevenLabs forced alignment API",
                         "Bulut dağıtım ve çok kullanıcı desteği",
                         "Lisans/hak yönetim modülü"
                 )
@@ -66,7 +67,7 @@ public final class DemoDegerOnerisiService {
                 "Büyük eserlerde TTS maliyeti yüksek — önizleme zorunlu",
                 "Metadata KONTROL_GEREKIYOR kayıtları insan onayı bekler",
                 "Telif/lisans her eser için ayrı değerlendirilmeli",
-                "Sonraki adım: forced alignment (Adım 29) ve onaylı tam eser üretim akışı"
+                "Sonraki adım: onaylı tam eser üretim akışı (Adım 30+)"
         );
     }
 }

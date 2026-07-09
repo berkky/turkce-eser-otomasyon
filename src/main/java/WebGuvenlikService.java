@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  */
 public final class WebGuvenlikService {
     private static final Set<String> IZINLI_UZANTILAR = Set.of(
-            "html", "css", "js", "json", "csv", "md", "txt", "mp3", "m4b", "wav", "pdf"
+            "html", "css", "js", "json", "csv", "md", "txt", "mp3", "m4b", "wav", "pdf", "srt", "vtt"
     );
     private static final Pattern API_KEY_PATTERN = Pattern.compile(
             "(?i)(api[_-]?key|xi-api-key|sk-[a-z0-9]{10,}|ELEVENLABS_API_KEY\\s*[=:]\\s*\\S+)"

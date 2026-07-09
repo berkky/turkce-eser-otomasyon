@@ -24,4 +24,27 @@
     });
   }
   [q,d,b,o].forEach(el => el && el.addEventListener('input', filtre));
+
+  const audio = document.getElementById('alignment-audio');
+  const segs = document.querySelectorAll('.align-seg');
+  if (audio && segs.length) {
+    function vurgula() {
+      const t = audio.currentTime;
+      segs.forEach(s => {
+        const start = parseFloat(s.getAttribute('data-start') || '0');
+        const next = s.nextElementSibling;
+        const end = next ? parseFloat(next.getAttribute('data-start') || '9999') : 9999;
+        const aktif = t >= start && t < end;
+        s.classList.toggle('align-active', aktif);
+      });
+    }
+    audio.addEventListener('timeupdate', vurgula);
+    segs.forEach(s => {
+      s.addEventListener('click', () => {
+        const start = parseFloat(s.getAttribute('data-start') || '0');
+        audio.currentTime = start;
+        audio.play();
+      });
+    });
+  }
 })();

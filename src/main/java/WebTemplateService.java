@@ -30,7 +30,7 @@ public final class WebTemplateService {
                   <main>
                     %s
                   </main>
-                  <footer>Eser Otomasyon · Adım 28 · API anahtarları asla gösterilmez</footer>
+                  <footer>Eser Otomasyon · Adım 29 · API anahtarları asla gösterilmez</footer>
                   <script src="/assets/app.js"></script>
                 </body>
                 </html>
@@ -47,7 +47,8 @@ public final class WebTemplateService {
                 {"/kuyruk", "kuyruk", "Kuyruk"},
                 {"/islemler", "islemler", "Güvenli İşlemler"},
                 {"/docs", "docs", "Dokümantasyon"},
-                {"/telaffuz", "telaffuz", "Telaffuz"}
+                {"/telaffuz", "telaffuz", "Telaffuz"},
+                {"/alignment", "alignment", "Alignment"}
         };
         StringBuilder sb = new StringBuilder();
         for (String[] l : linkler) {
@@ -276,7 +277,14 @@ public final class WebTemplateService {
                   <input type="hidden" name="eserId" value="5">
                   <button class="btn" type="submit">Kaşağı ElevenLabs önizlemesi üret</button>
                 </form>
-                """.formatted(nonce, nonce, nonce, nonce);
+                <h3>Mock Alignment (Adım 29)</h3>
+                <form method="post" action="/islemler" style="margin:.75rem 0">
+                  <input type="hidden" name="nonce" value="%s">
+                  <input type="hidden" name="aksiyon" value="alignment-mock">
+                  <input type="hidden" name="eserId" value="5">
+                  <button class="btn secondary" type="submit">ESER-00005 mock alignment üret</button>
+                </form>
+                """.formatted(nonce, nonce, nonce, nonce, nonce);
         return layout("Güvenli İşlemler", "islemler", govde);
     }
 
@@ -397,6 +405,15 @@ public final class WebTemplateService {
                      <a class="btn secondary" href="/eser/5">ESER-00005 plan</a></p>
                   <div class="alert">Tam eser üretimi bu adımda kapalı — yalnızca onaylı kısa önizleme.</div>
                 </div>
+                <h2>Adım 29: Ses-Metin Hizalama ve Okuma Takibi</h2>
+                <div class="demo-eser-box">
+                  <p>%s</p>
+                  <p><a class="btn secondary" href="/alignment">Alignment paneli</a>
+                     <a class="btn secondary" href="/eser/5/alignment">ESER-00005 okuma takibi</a>
+                     <a class="btn secondary" href="/kalite">Kalite</a>
+                     <a class="btn secondary" href="/telaffuz">Telaffuz</a></p>
+                  <div class="alert">Gerçek ElevenLabs forced alignment yalnızca açık onaylı komutla çalışır. Mock demo her zaman kullanılabilir.</div>
+                </div>
                 <h2>Örnek Eserler</h2>
                 <div class="cards">%s</div>
                 <h2>Önce / Sonra</h2>
@@ -427,6 +444,7 @@ public final class WebTemplateService {
                 timeline,
                 WebGuvenlikService.htmlKacis(v.adim28().krediMesaj()),
                 v.adim28().onizlemeVar() ? v.adim28().audioHtml() : "",
+                WebGuvenlikService.htmlKacis(v.adim29().mesaj()),
                 ornekEserler, once, sonra, yapildi, kaldi, uyarilar,
                 v.riskler().stream().map(r -> "<li>" + WebGuvenlikService.htmlKacis(r) + "</li>").reduce("", String::concat));
         return layout("Patron Demo", "demo", govde);
@@ -527,6 +545,117 @@ public final class WebTemplateService {
                 WebGuvenlikService.htmlKacis(uretimPlani));
     }
 
+    public static String alignmentGenel(AlignmentPlan p5, AlignmentPlan p6, AlignmentResult r5, String nonce) {
+        String govde = """
+                <h2>Ses-Metin Hizalama (Forced Alignment)</h2>
+                <div class="alert">Gerçek ElevenLabs forced alignment API yalnızca açık onaylı komutla çalışır. Mock alignment web panelden üretilebilir.</div>
+                <h3>ESER-00005 — Kaşağı</h3>
+                <p><strong>Durum:</strong> %s · %s</p>
+                <p><strong>Segment:</strong> %d · <strong>Kelime:</strong> %d</p>
+                <p><a class="btn" href="/eser/5/alignment">Okuma takibi</a>
+                   <a class="btn secondary" href="/api/alignment/5">JSON plan</a></p>
+                <h3>ESER-00006 — Büyük eser</h3>
+                <p><strong>Durum:</strong> %s</p>
+                <p>%s</p>
+                """.formatted(
+                WebGuvenlikService.htmlKacis(p5.status()), WebGuvenlikService.htmlKacis(p5.reason()),
+                r5.segmentCount(), r5.wordCount(),
+                WebGuvenlikService.htmlKacis(p6.status()), WebGuvenlikService.htmlKacis(p6.reason()));
+        return layout("Alignment", "alignment", govde);
+    }
+
+    public static String eserAlignment(int eserId, AlignmentPlan plan, AlignmentResult sonuc,
+                                     String mediaId, AlignmentService.EserAlignmentDurum durum,
+                                     String nonce) {
+        StringBuilder segmentler = new StringBuilder("<ul id=\"alignment-segments\" class=\"alignment-list\">");
+        if (sonuc.segments() != null && !sonuc.segments().isEmpty()) {
+            for (AlignmentSegment s : sonuc.segments()) {
+                segmentler.append("<li class=\"align-seg\" data-start=\"")
+                        .append(s.startSeconds()).append("\">")
+                        .append("<span class=\"badge\">").append(String.format("%.1fs", s.startSeconds()))
+                        .append("</span> ")
+                        .append(WebGuvenlikService.htmlKacis(s.text()))
+                        .append("</li>");
+            }
+        } else {
+            segmentler.append("<li class=\"muted\">Henüz segment yok.</li>");
+        }
+        segmentler.append("</ul>");
+
+        StringBuilder uyariBlok = new StringBuilder();
+        if (durum.demoFixture()) {
+            uyariBlok.append("""
+                    <div class="alert warn"><strong>Demo fixture alignment</strong> — gerçek ElevenLabs önizlemesi kullanılmadı.
+                    Patron demosu için mock altyazı ve okuma takibi gösterilir.</div>
+                    """);
+        }
+        if (!durum.altyaziVar()) {
+            uyariBlok.append("""
+                    <div class="alert warn">
+                      <p><strong>Henüz altyazı yok</strong></p>
+                      <p>Önce ElevenLabs önizleme gerekir; gerçek ses-metin hizalama için preview MP3 şarttır.</p>
+                      <p>Kredi yoksa mock fixture ile demo doğrulaması yapılabilir:
+                         <code>elevenlabs-alignment.ps1 -EserId 5 -Mock -DemoFixture</code></p>
+                    </div>
+                    """);
+        }
+
+        String player = mediaId != null && !mediaId.isBlank()
+                ? "<audio id=\"alignment-audio\" controls src=\"/media/preview/"
+                + WebGuvenlikService.htmlKacis(mediaId) + "\"></audio>"
+                : "<p class=\"muted\">Önizleme sesi yok — demo fixture veya ElevenLabs önizlemesi gerekir.</p>";
+
+        String mockForm;
+        if (durum.mockButonAktif()) {
+            mockForm = """
+                    <form method="post" action="/islemler" style="margin:.75rem 0">
+                      <input type="hidden" name="nonce" value="%s">
+                      <input type="hidden" name="aksiyon" value="alignment-mock">
+                      <input type="hidden" name="eserId" value="5">
+                      <button class="btn" type="submit">Mock alignment üret</button>
+                    </form>
+                    """.formatted(WebGuvenlikService.htmlKacis(nonce));
+        } else if (eserId == SesKaliteOlcutleri.KASAGI_ESER_ID) {
+            mockForm = "<p class=\"muted\"><strong>Mock alignment üret</strong> — kullanılamıyor: "
+                    + WebGuvenlikService.htmlKacis(durum.mockButonNeden()) + "</p>";
+        } else {
+            mockForm = "";
+        }
+
+        String altyaziLink = durum.altyaziVar()
+                ? """
+                   <a class="btn secondary" href="/api/alignment/%d/subtitles?format=srt">SRT</a>
+                   <a class="btn secondary" href="/api/alignment/%d/subtitles?format=vtt">VTT</a>
+                   """.formatted(eserId, eserId)
+                : "<span class=\"muted\">SRT/VTT — altyazı henüz yok</span>";
+
+        String govde = """
+                <h2>ESER-%s — Okuma Takibi</h2>
+                <p><strong>Alignment durumu:</strong> %s</p>
+                <p>%s</p>
+                %s
+                %s
+                %s
+                <div class="cards">
+                  <div class="card"><span>Segment</span><strong>%d</strong></div>
+                  <div class="card"><span>Kelime</span><strong>%d</strong></div>
+                  <div class="card"><span>Süre</span><strong>%.1f sn</strong></div>
+                </div>
+                <p><a class="btn secondary" href="/api/alignment/%d/segments">Segment JSON</a>
+                   %s</p>
+                <h3>Segmentler</h3>
+                %s
+                """.formatted(
+                String.format("%05d", eserId),
+                WebGuvenlikService.htmlKacis(plan.status()),
+                WebGuvenlikService.htmlKacis(plan.reason()),
+                uyariBlok,
+                player, mockForm,
+                sonuc.segmentCount(), sonuc.wordCount(), sonuc.durationSeconds(),
+                eserId, altyaziLink, segmentler);
+        return layout("Eser " + eserId + " Alignment", "alignment", govde);
+    }
+
     private static String badgeSinif(String durum) {
         if (durum == null) return "";
         return switch (durum) {
@@ -540,6 +669,9 @@ public final class WebTemplateService {
     public record Adim28Bolum(boolean krediVar, boolean onizlemeVar, String krediMesaj, String audioHtml) {
     }
 
+    public record Adim29Bolum(boolean onizlemeVar, boolean alignmentVar, boolean krediVar, String mesaj) {
+    }
+
     public record DemoSayfaVeri(
             String degerOnerisi, String simulasyonNotu,
             DemoMetrikService.DemoMetrikler metrikler,
@@ -547,7 +679,8 @@ public final class WebTemplateService {
             DemoDegerOnerisiService.OnceSonra onceSonra,
             DemoDegerOnerisiService.YapildiKaldi yapildiKaldi,
             List<String> uyarilar, List<String> riskler,
-            Adim28Bolum adim28
+            Adim28Bolum adim28,
+            Adim29Bolum adim29
     ) {
     }
 

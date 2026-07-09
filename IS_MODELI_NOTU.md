@@ -13,13 +13,14 @@
 2. **Katalog yönetimi** — Excel + metadata JSON ile merkezi künye takibi
 3. **Sesli kitap üretim hazırlığı** — Metin bölme, TTS parçalama, sağlayıcı karşılaştırma
 4. **Kalite değerlendirme** — Önizleme, insan puanı, telaffuz notları
-5. **Yerel demo/sunum** — Patron veya yatırımcıya 5 dakikalık canlı gösterim
+5. **Okuma takibi / altyazı** — Preview ses-metin hizalama, SRT/VTT export (Adım 29)
+6. **Yerel demo/sunum** — Patron veya yatırımcıya 5 dakikalık canlı gösterim
 
 ## MVP Değer Önerisi
 
 Mevcut sistem, Türkçe eserler için uçtan uca **yerel** bir üretim hattının çalışır prototipini sunar:
 
-- Kaynak alma → arşivleme → metadata → metin bölme → TTS hazırlık → kalite paneli → web kontrol
+- Kaynak alma → arşivleme → metadata → metin bölme → TTS hazırlık → kalite paneli → önizleme → alignment/altyazı → web kontrol
 
 Bulut bağımlılığı minimum; hassas veriler localhost'ta kalır.
 
@@ -44,10 +45,11 @@ Abartılı iddia yok: sistem "her kitabı yasal olarak seslendirir" demez.
 ## Gerekli Sonraki Yatırımlar
 
 1. Canlı ElevenLabs önizleme (Adım 28 — tamamlandı, onaylı kısa önizleme)
-2. Lisans/hak yönetim modülü
-3. Telaffuz sözlüğü ve normalizasyon
-4. Bulut dağıtım ve kimlik doğrulama (isteğe bağlı)
-5. Tam eser üretim onay akışı ve maliyet tahmini UI
+2. Mock alignment ve okuma takibi (Adım 29 — tamamlandı; gerçek Forced Alignment API Adım 30)
+3. Lisans/hak yönetim modülü
+4. Telaffuz sözlüğü ve normalizasyon (Adım 28 ile başlandı)
+5. Bulut dağıtım ve kimlik doğrulama (isteğe bağlı)
+6. Tam eser üretim onay akışı ve maliyet tahmini UI
 
 ## Uyarı
 

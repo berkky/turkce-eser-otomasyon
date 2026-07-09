@@ -1,5 +1,12 @@
 # Değişiklik Günlüğü
 
+## 29.0.0 — Forced alignment ve okuma takibi
+- Mock forced alignment servisi ve `ses-arsivi/_alignment/` depolama.
+- SRT/VTT export, okuma takibi UI (`/eser/5/alignment`).
+- API: `/api/alignment`, segments, subtitles.
+- `elevenlabs-alignment.ps1`, `Adim29Dogrulama`, `adim29-self-test.ps1`.
+- `ADIM_29_MIMARI.md`
+
 ## 28.0.0 — ElevenLabs önizleme, telaffuz ve maliyet planı
 - Güvenli ElevenLabs kısa önizleme (ESER-00005, kredi/idempotent koruma).
 - `TelaffuzSozluguService`, `TelaffuzNormalizerService`, `TtsMaliyetPlanService`.

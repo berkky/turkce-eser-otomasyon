@@ -40,4 +40,8 @@ footer{padding:1rem 1.5rem;color:#9aa8bc;font-size:.85rem;border-top:1px solid #
 .demo-eser-box{background:#1a2332;border-left:4px solid #ffb020;border-radius:8px;padding:1rem;margin:1rem 0}
 .ok-li{color:#3dd68c}
 .badge.bad{background:#3a1a1a;color:#ff6b6b}
+.alignment-list{list-style:none;padding:0;margin:1rem 0}
+.align-seg{padding:.5rem .75rem;margin:.25rem 0;border-radius:6px;cursor:pointer;border:1px solid transparent}
+.align-seg:hover{background:#1a2332}
+.align-seg.align-active{background:#243044;border-color:#4da3ff}
 @media(max-width:640px){main{padding:1rem}table{font-size:.85rem}.before-after{grid-template-columns:1fr}}

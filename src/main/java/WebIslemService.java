@@ -53,6 +53,7 @@ public final class WebIslemService {
             case "sistem-yenile" -> WebIslemSonucu.basarili("Sistem durumu yenilendi.", "/sistem");
             case "eser-tara" -> WebIslemSonucu.basarili("Eser listesi güncellendi.", "/eserler");
             case "elevenlabs-onizleme" -> elevenLabsOnizleme(form);
+            case "alignment-mock" -> alignmentMock(form);
             default -> WebIslemSonucu.hatali("Bilinmeyen işlem: " + aksiyon);
         };
     }
@@ -84,6 +85,25 @@ public final class WebIslemService {
         return WebIslemSonucu.basarili(mesaj, "/eser/" + eserId);
     }
 
+    private WebIslemSonucu alignmentMock(Map<String, String> form) throws Exception {
+        int eserId = parseEserId(form.get("eserId"));
+        if (eserId <= 0) {
+            eserId = IZINLI_ONIZLEME_ESER;
+        }
+        if (eserId != IZINLI_ONIZLEME_ESER) {
+            return WebIslemSonucu.hatali("Mock alignment yalnızca ESER-00005 için açıktır.");
+        }
+        AlignmentService svc = new AlignmentService(ortam.sesArsivi());
+        AlignmentService.AlignmentSonucu sonuc = svc.uret(eserId, true, false);
+        if (!sonuc.basarili()) {
+            return WebIslemSonucu.hatali(sonuc.mesaj());
+        }
+        String mesaj = sonuc.mevcut()
+                ? "Mevcut mock alignment kullanıldı."
+                : "Mock alignment üretildi (" + sonuc.sonuc().segmentCount() + " segment).";
+        return WebIslemSonucu.basarili(mesaj, "/eser/" + eserId + "/alignment");
+    }
+
     private static int parseEserId(String ham) {
         if (ham == null || ham.isBlank()) {
             return 0;
@@ -100,5 +120,6 @@ public final class WebIslemService {
         Files.createDirectories(ortam.sesArsivi());
         Files.createDirectories(ortam.kuyruk());
         Files.createDirectories(ortam.kalitePanel());
+        Files.createDirectories(ortam.sesArsivi().resolve("_alignment"));
     }
 }
