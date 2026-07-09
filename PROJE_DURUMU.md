@@ -1,4 +1,4 @@
-# Proje Durumu — Adım 25
+# Proje Durumu — Adım 26
 
 ## Tamamlanan çekirdekler
 
@@ -6,17 +6,16 @@
 - Piper, Google Chirp, ElevenLabs entegrasyonu
 - ElevenLabs kredi kontrolü, önizleme, mock mod
 - Metadata güvenlik ve kurtarma
-- **Ses önizleme kalite paneli (statik HTML)**
-- **Sağlayıcı karşılaştırma raporu**
-- **İnsan puanlama ve telaffuz notları altyapısı**
+- Ses önizleme kalite paneli (statik HTML)
+- **Yerel web MVP kontrol paneli (localhost:8787)**
 
 ## Doğrulama
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\adim25-self-test.ps1
-powershell -ExecutionPolicy Bypass -File .\ses-kalite-panel.ps1
+powershell -ExecutionPolicy Bypass -File .\adim26-self-test.ps1
+powershell -ExecutionPolicy Bypass -File .\web-panel.ps1
 ```
 
-## Sonraki adım (26)
+## Sonraki adım (27)
 
-Canlı önizleme sonrası panel otomatik güncelleme, telaffuz sözlüğü entegrasyonu, puan tabanlı model önerisi.
+Web panelden onaylı canlı önizleme, telaffuz sözlüğü düzenleme, kuyruk canlı izleme.

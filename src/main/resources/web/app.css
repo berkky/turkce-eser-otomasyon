@@ -1,0 +1,30 @@
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,system-ui,sans-serif;background:#0f1419;color:#e7ecf3;line-height:1.5}
+a{color:#4da3ff;text-decoration:none}
+a:hover{text-decoration:underline}
+header{background:#121a24;border-bottom:1px solid #2a3548;padding:1rem 1.5rem}
+header h1{margin:0;font-size:1.35rem}
+nav{display:flex;flex-wrap:wrap;gap:.5rem 1rem;margin-top:.75rem}
+nav a{padding:.35rem .65rem;border-radius:6px;color:#9aa8bc}
+nav a.active,nav a:hover{background:#1a2332;color:#e7ecf3;text-decoration:none}
+main{padding:1.25rem 1.5rem;max-width:1200px;margin:0 auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin:1rem 0}
+.card{background:#1a2332;border-radius:10px;padding:1rem;border-left:4px solid #4da3ff}
+.card.warn{border-left-color:#ffb020}
+.card strong{display:block;font-size:1.5rem;color:#4da3ff}
+table{width:100%;border-collapse:collapse;background:#1a2332;border-radius:8px;overflow:hidden;margin:1rem 0}
+th,td{padding:.6rem .75rem;text-align:left;border-bottom:1px solid #2a3548}
+th{background:#121a24;color:#9aa8bc;font-size:.85rem}
+.badge{display:inline-block;padding:.15rem .45rem;border-radius:4px;font-size:.75rem;background:#2a3548}
+.badge.ok{background:#1a3a2a;color:#3dd68c}
+.badge.warn{background:#4a3a1a;color:#ffb020}
+.badge.bad{background:#3a1a1a;color:#ff6b6b}
+.alert{padding:.75rem 1rem;border-radius:8px;margin:1rem 0;background:#2a2418;border:1px solid #ffb020;color:#ffd48a}
+.filters{display:flex;flex-wrap:wrap;gap:.75rem;margin:1rem 0}
+.filters input,.filters select{padding:.4rem .6rem;background:#1a2332;border:1px solid #334;color:#e7ecf3;border-radius:6px}
+.btn{display:inline-block;padding:.5rem 1rem;background:#4da3ff;color:#0f1419;border-radius:6px;font-weight:600;border:none;cursor:pointer}
+.btn.secondary{background:#2a3548;color:#e7ecf3}
+pre{background:#0d1218;padding:1rem;border-radius:8px;overflow:auto;white-space:pre-wrap;font-size:.85rem}
+audio{width:100%;margin:.5rem 0}
+footer{padding:1rem 1.5rem;color:#9aa8bc;font-size:.85rem;border-top:1px solid #2a3548;text-align:center}
+@media(max-width:640px){main{padding:1rem}table{font-size:.85rem}}

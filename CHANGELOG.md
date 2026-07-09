@@ -1,5 +1,14 @@
 # Değişiklik Günlüğü
 
+## 26.0.0 — Yerel web MVP kontrol paneli
+- Localhost web paneli eklendi (`YerelWebSunucuApp`, port 8787).
+- Dashboard, eser listesi/detay, kalite, sistem, kuyruk, dokümantasyon sayfaları eklendi.
+- Güvenli JSON API ve `/media/preview/{safeId}` ses endpoint'i eklendi.
+- CSRF benzeri nonce ile güvenli işlemler (kalite yenile, eser tara).
+- `web-panel.ps1` ve `adim26-self-test.ps1` eklendi.
+- API anahtarı sızıntı filtresi, path traversal ve 0 byte media koruması.
+- Tam eser üretimi web panelinden başlatılamaz.
+
 ## 25.0.0 — Ses önizleme kalite paneli
 - Statik HTML kalite paneli ve sağlayıcı karşılaştırma raporu eklendi.
 - SesOnizlemeKesifService ile önizleme keşfi (salt okunur) eklendi.

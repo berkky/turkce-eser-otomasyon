@@ -1,37 +1,38 @@
-# Türkçe Eser Otomasyonu — Adım 25
-## Ses Önizleme Kalite Paneli ve Sağlayıcı Karşılaştırma
+# Türkçe Eser Otomasyonu — Adım 26
+## Yerel Web MVP Kontrol Paneli
 
-Bu paket **tam projedir; patch değildir**. Adım 17–24 özelliklerini eksiksiz içerir.
+Bu paket **tam projedir; patch değildir**. Adım 17–25 özelliklerini eksiksiz içerir.
 
 ## Bu sürümde yenilikler
 
-- Statik HTML ses kalite paneli (`ses-kalite-panel.ps1`)
-- Önizleme keşif sistemi (ElevenLabs, Piper, Google klasörleri)
-- İnsan puanlama şablonu (`kalite-degerlendirmeleri.json`)
-- Telaffuz notları (`telaffuz-notlari.json`)
-- Sağlayıcı karşılaştırma raporu (HTML + Markdown + CSV)
-- UTF-8 self-test başlık düzeltmeleri
-- Mock demo verisi (`kalite-panel-demo-verisi.ps1`)
+- Localhost web kontrol paneli (`web-panel.ps1`) — http://127.0.0.1:8787
+- Dashboard, eser listesi/detay, kalite paneli, sistem durumu, kuyruk
+- Güvenli JSON API (`/api/status`, `/api/eserler`, vb.)
+- Güvenli ses önizleme endpoint (`/media/preview/{safeId}`)
+- CSRF benzeri nonce ile güvenli işlemler sayfası
+- `com.sun.net.httpserver.HttpServer` — Spring Boot yok
 
 ## Güvenlik
 
-- Gerçek ElevenLabs API çağrısı panel tarafından yapılmaz.
-- Var olan arşiv dosyalarına yazılmaz; yalnızca `ses-arsivi_kalite-panel` klasörüne rapor üretilir.
-- Mock önizlemeler açıkça işaretlenir.
+- Yalnızca localhost (`127.0.0.1:8787`).
+- API anahtarları hiçbir ekranda veya JSON'da gösterilmez.
+- Tam eser ses üretimi web panelinden başlatılamaz.
+- Gerçek ElevenLabs API çağrısı otomatik yapılmaz.
+- Var olan arşiv, ses, metin ve Excel dosyalarına dokunulmaz.
 
 ## Komutlar
 
 ```powershell
-# Self-test
-powershell -ExecutionPolicy Bypass -File .\adim25-self-test.ps1
+# Self-test (Adım 21–26)
+powershell -ExecutionPolicy Bypass -File .\adim26-self-test.ps1
 
-# Kalite paneli üret
+# Web paneli başlat
+powershell -ExecutionPolicy Bypass -File .\web-panel.ps1
+
+# Kalite paneli statik çıktı (korunur)
 powershell -ExecutionPolicy Bypass -File .\ses-kalite-panel.ps1
-
-# Demo mock veri + panel
-powershell -ExecutionPolicy Bypass -File .\kalite-panel-demo-verisi.ps1
 ```
 
-Panel yolu: `C:\Users\Lenovo\Desktop\ses-arsivi_kalite-panel\index.html`
+Web panel URL: **http://127.0.0.1:8787**
 
-Ayrıntılı mimari: `ADIM_25_MIMARI.md`
+Ayrıntılı mimari: `ADIM_26_MIMARI.md`

@@ -1,0 +1,289 @@
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+/**
+ * Statik HTML şablonları.
+ */
+public final class WebTemplateService {
+    private WebTemplateService() {
+    }
+
+    public static String layout(String baslik, String aktif, String govde) {
+        return """
+                <!DOCTYPE html>
+                <html lang="tr">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                  <title>%s — Eser Otomasyon</title>
+                  <link rel="stylesheet" href="/assets/app.css">
+                </head>
+                <body>
+                  <header>
+                    <h1>Türkçe Eser Otomasyonu</h1>
+                    <p style="color:#9aa8bc;margin:.25rem 0 0">Yerel Web MVP — localhost only</p>
+                    <nav>
+                      %s
+                    </nav>
+                  </header>
+                  <main>
+                    %s
+                  </main>
+                  <footer>Eser Otomasyon · Adım 26 · API anahtarları asla gösterilmez</footer>
+                  <script src="/assets/app.js"></script>
+                </body>
+                </html>
+                """.formatted(WebGuvenlikService.htmlKacis(baslik), nav(aktif), govde);
+    }
+
+    private static String nav(String aktif) {
+        String[][] linkler = {
+                {"/", "ana", "Ana Sayfa"},
+                {"/eserler", "eserler", "Eserler"},
+                {"/kalite", "kalite", "Ses Kalite"},
+                {"/sistem", "sistem", "Sistem"},
+                {"/kuyruk", "kuyruk", "Kuyruk"},
+                {"/islemler", "islemler", "Güvenli İşlemler"},
+                {"/docs", "docs", "Dokümantasyon"},
+                {"/telaffuz", "telaffuz", "Telaffuz"}
+        };
+        StringBuilder sb = new StringBuilder();
+        for (String[] l : linkler) {
+            String cls = l[1].equals(aktif) ? " class=\"active\"" : "";
+            sb.append("<a href=\"").append(l[0]).append("\"").append(cls).append(">")
+                    .append(l[2]).append("</a>");
+        }
+        return sb.toString();
+    }
+
+    public static String dashboard(DashboardVeri v) {
+        String govde = """
+                <h2>Kontrol Paneli</h2>
+                <p>Son güncelleme: %s</p>
+                <div class="cards">
+                  <div class="card"><span>Toplam eser</span><strong>%d</strong></div>
+                  <div class="card"><span>Metadata HAZIR</span><strong>%d</strong></div>
+                  <div class="card warn"><span>KONTROL_GEREKIYOR</span><strong>%d</strong></div>
+                  <div class="card"><span>TTS hazır / tamam</span><strong>%d / %d</strong></div>
+                  <div class="card"><span>Önizleme</span><strong>%d</strong></div>
+                  <div class="card warn"><span>Büyük eser</span><strong>%d</strong></div>
+                  <div class="card"><span>ElevenLabs</span><strong>%s</strong></div>
+                  <div class="card"><span>Piper</span><strong>%s</strong></div>
+                  <div class="card"><span>FFmpeg</span><strong>%s</strong></div>
+                  <div class="card"><span>Excel katalog</span><strong>%s</strong></div>
+                </div>
+                <div class="alert">Tam eser ses üretimi bu panelden başlatılamaz. Yalnızca önizleme ve izleme.</div>
+                <p>
+                  <a class="btn" href="/eserler">Eserleri görüntüle</a>
+                  <a class="btn secondary" href="/kalite">Kalite paneli</a>
+                  <a class="btn secondary" href="/sistem">Sistem durumu</a>
+                </p>
+                """.formatted(v.guncelleme(), v.toplamEser(), v.metadataHazir(), v.kontrolGerek(),
+                v.ttsHazir(), v.ttsTamam(), v.onizleme(), v.buyukEser(),
+                WebGuvenlikService.htmlKacis(v.elevenLabs()), WebGuvenlikService.htmlKacis(v.piper()),
+                v.ffmpeg() ? "HAZIR" : "KAPALI", v.excel() ? "VAR" : "YOK");
+        return layout("Kontrol Paneli", "ana", govde);
+    }
+
+    public static String eserler(List<WebEserService.WebEserOzeti> eserler) {
+        StringBuilder satirlar = new StringBuilder();
+        for (WebEserService.WebEserOzeti e : eserler) {
+            String buyukBadge = e.buyukEser() ? "<span class=\"badge warn\">Büyük</span>" : "";
+            String onizBadge = e.onizlemeVar() ? "<span class=\"badge ok\">Önizleme</span>" : "";
+            satirlar.append("<tr data-eser-row data-ad=\"").append(WebGuvenlikService.htmlKacis(e.eserAdi()))
+                    .append("\" data-durum=\"").append(WebGuvenlikService.htmlKacis(e.metadataDurumu()))
+                    .append("\" data-buyuk=\"").append(e.buyukEser())
+                    .append("\" data-onizleme=\"").append(e.onizlemeVar()).append("\">")
+                    .append("<td>ESER-").append(String.format("%05d", e.eserId())).append("</td>")
+                    .append("<td>").append(WebGuvenlikService.htmlKacis(e.eserAdi())).append(" ").append(buyukBadge).append("</td>")
+                    .append("<td>").append(WebGuvenlikService.htmlKacis(e.yazar())).append("</td>")
+                    .append("<td>").append(WebGuvenlikService.htmlKacis(e.metadataDurumu())).append("</td>")
+                    .append("<td>").append(String.format(Locale.ROOT, "%.0f%%", e.guvenPuani() * 100)).append("</td>")
+                    .append("<td>").append(e.ttsParca()).append("</td>")
+                    .append("<td>").append(onizBadge).append("</td>")
+                    .append("<td><a href=\"/eser/").append(e.eserId()).append("\">Detay</a></td></tr>");
+        }
+        String govde = """
+                <h2>Eserler</h2>
+                <div class="filters">
+                  <input id="eser-ara" placeholder="Başlıkta ara…">
+                  <select id="durum-filtre"><option value="">Tüm durumlar</option>
+                    <option>HAZIR</option><option>KONTROL_GEREKIYOR</option><option>BILINMIYOR</option></select>
+                  <select id="buyuk-filtre"><option value="">Büyük eser</option>
+                    <option value="evet">Yalnız büyük</option><option value="hayir">Büyük değil</option></select>
+                  <select id="onizleme-filtre"><option value="">Önizleme</option>
+                    <option value="evet">Önizlemeli</option><option value="hayir">Önizlemesiz</option></select>
+                </div>
+                <table><thead><tr>
+                  <th>ID</th><th>Eser</th><th>Yazar</th><th>Metadata</th><th>Güven</th><th>TTS parça</th><th>Önizleme</th><th></th>
+                </tr></thead><tbody>%s</tbody></table>
+                """.formatted(satirlar);
+        return layout("Eserler", "eserler", govde);
+    }
+
+    public static String eserDetay(WebEserService.WebEserDetay d, WebKalitePanelService kalite) {
+        WebEserService.WebEserOzeti e = d.ozet();
+        StringBuilder oniz = new StringBuilder();
+        for (SesOnizlemeKaydi k : d.onizlemeler()) {
+            String mediaId = WebKalitePanelService.guvenliId(k);
+            String mock = k.mock() ? " <span class=\"badge warn\">MOCK</span>" : "";
+            String player = "";
+            if (!SesKaliteOlcutleri.DURUM_BEKLENIYOR.equals(k.status())
+                    && !SesKaliteOlcutleri.DURUM_GECERSIZ.equals(k.status())
+                    && k.audioPath() != null && !k.audioPath().isBlank()) {
+                player = "<audio controls src=\"/media/preview/" + WebGuvenlikService.htmlKacis(mediaId) + "\"></audio>";
+            }
+            oniz.append("<li><strong>").append(WebGuvenlikService.htmlKacis(k.provider())).append("</strong> ")
+                    .append(WebGuvenlikService.htmlKacis(k.status())).append(mock)
+                    .append(player).append("</li>");
+        }
+        String buyukUyari = e.buyukEser()
+                ? "<div class=\"alert\">Büyük eser — önizleme önerilir. Tam üretim için kredi onayı gerekir. Web panelinden başlatılamaz.</div>"
+                : "";
+        String pdfLink = d.kaynakPdf() != null
+                ? "<a class=\"btn secondary\" href=\"/media/file?tip=pdf&eser=" + e.eserId() + "\">Kaynak PDF</a>" : "";
+        String metaLink = d.metadataJson() != null
+                ? "<a class=\"btn secondary\" href=\"/media/file?tip=meta&eser=" + e.eserId() + "\">Metadata JSON</a>" : "";
+        String govde = """
+                <h2>ESER-%s — %s</h2>
+                %s
+                <div class="cards">
+                  <div class="card"><span>Yazar</span><strong style="font-size:1rem">%s</strong></div>
+                  <div class="card"><span>Metadata</span><strong style="font-size:1rem">%s</strong></div>
+                  <div class="card"><span>TTS parça</span><strong>%d</strong></div>
+                  <div class="card"><span>Karakter</span><strong>%d</strong></div>
+                </div>
+                <p><strong>ISBN:</strong> %s · <strong>Yayınevi:</strong> %s</p>
+                <p><strong>Kanıt:</strong> %s</p>
+                <p><strong>Kaynak:</strong> %s</p>
+                <p>%s %s <a class="btn secondary" href="/kalite">Kalite paneli</a></p>
+                <h3>Önizlemeler</h3><ul>%s</ul>
+                <h3>Metin özeti</h3><pre>%s</pre>
+                """.formatted(
+                String.format("%05d", e.eserId()), WebGuvenlikService.htmlKacis(e.eserAdi()), buyukUyari,
+                WebGuvenlikService.htmlKacis(e.yazar()), WebGuvenlikService.htmlKacis(e.metadataDurumu()),
+                e.ttsParca(), e.karakter(), WebGuvenlikService.htmlKacis(e.isbn()),
+                WebGuvenlikService.htmlKacis(e.yayinevi()), WebGuvenlikService.htmlKacis(d.kanit()),
+                WebGuvenlikService.htmlKacis(d.kaynakDosya()), pdfLink, metaLink,
+                oniz, WebGuvenlikService.htmlKacis(d.metinOzet()));
+        return layout("Eser " + e.eserId(), "eserler", govde);
+    }
+
+    public static String kalite(SesKalitePanelRaporu rapor, Map<String, String> mediaIdleri) {
+        StringBuilder kartlar = new StringBuilder();
+        for (SesOnizlemeKaydi k : rapor.onizlemeler()) {
+            String id = mediaIdleri.get(k.audioPath());
+            String mock = k.mock() ? "<span class=\"badge warn\">MOCK — gerçek TTS değildir</span>" : "";
+            String audio = id != null
+                    ? "<audio controls src=\"/media/preview/" + WebGuvenlikService.htmlKacis(id) + "\"></audio>" : "";
+            kartlar.append("<div class=\"card\"><h3>ESER-").append(String.format("%05d", k.eserId()))
+                    .append(" — ").append(WebGuvenlikService.htmlKacis(k.eserAdi())).append("</h3>")
+                    .append(mock).append("<p>").append(WebGuvenlikService.htmlKacis(k.provider())).append(" / ")
+                    .append(WebGuvenlikService.htmlKacis(k.status())).append("</p>")
+                    .append(audio).append("<pre style=\"max-height:80px\">")
+                    .append(WebGuvenlikService.htmlKacis(k.previewMetin())).append("</pre></div>");
+        }
+        String govde = "<h2>Ses Kalite Paneli</h2><p>En iyi öneri: "
+                + WebGuvenlikService.htmlKacis(rapor.enIyiOnerilenSaglayici()) + " / "
+                + WebGuvenlikService.htmlKacis(rapor.enIyiOnerilenModel()) + "</p>"
+                + kartlar + "<p><a href=\"/islemler\">Paneli yenile</a></p>";
+        return layout("Ses Kalite", "kalite", govde);
+    }
+
+    public static String sistem(WebSistemDurumService.SistemDurumu d) {
+        String govde = """
+                <h2>Sistem Durumu</h2>
+                <table>
+                  <tr><th>Java</th><td>%s</td></tr>
+                  <tr><th>Proje</th><td>%s</td></tr>
+                  <tr><th>Arşiv</th><td>%s</td></tr>
+                  <tr><th>Metin arşivi</th><td>%s</td></tr>
+                  <tr><th>Ses arşivi</th><td>%s</td></tr>
+                  <tr><th>Kuyruk</th><td>%s</td></tr>
+                  <tr><th>Excel</th><td>%s</td></tr>
+                  <tr><th>FFmpeg</th><td>%s</td></tr>
+                  <tr><th>Piper</th><td>%s</td></tr>
+                  <tr><th>ElevenLabs API</th><td>%s</td></tr>
+                  <tr><th>ElevenLabs voice</th><td>%s</td></tr>
+                  <tr><th>ElevenLabs TTS</th><td>%s (kalan: %d)</td></tr>
+                  <tr><th>OpenAI</th><td>%s</td></tr>
+                  <tr><th>Gemini</th><td>%s</td></tr>
+                  <tr><th>Tesseract</th><td>%s</td></tr>
+                </table>
+                """.formatted(d.javaSurumu(), d.projeKlasoru(), d.arsiv(), d.metinArsivi(), d.sesArsivi(),
+                d.kuyruk(), d.excelVar() ? "VAR" : "YOK", d.ffmpeg() ? "HAZIR" : "KAPALI",
+                d.piper() ? "HAZIR" : "KAPALI", d.elevenLabsApi(), d.elevenLabsVoice(),
+                WebGuvenlikService.htmlKacis(d.elevenLabsTts()), d.elevenLabsKalanKredi(),
+                d.openAiApi(), d.geminiApi(), d.tesseract() ? "HAZIR" : "KAPALI");
+        return layout("Sistem", "sistem", govde);
+    }
+
+    public static String kuyruk(List<UretimIsi> isler) {
+        StringBuilder satirlar = new StringBuilder();
+        for (UretimIsi i : isler) {
+            satirlar.append("<tr><td>").append(WebGuvenlikService.htmlKacis(i.id())).append("</td>")
+                    .append("<td>").append(WebGuvenlikService.htmlKacis(i.eserAdi())).append("</td>")
+                    .append("<td>").append(i.politika()).append("</td>")
+                    .append("<td>").append(i.durum()).append("</td>")
+                    .append("<td>").append(i.hazirParca()).append("/").append(i.toplamParca()).append("</td>")
+                    .append("<td>").append(WebGuvenlikService.htmlKacis(i.aktifSaglayici())).append("</td>")
+                    .append("<td>").append(i.toplamKarakter()).append("</td></tr>");
+        }
+        String govde = """
+                <h2>Üretim Kuyruğu</h2>
+                <div class="alert">Tam eser üretimi web panelinden başlatılamaz. Yalnızca izleme.</div>
+                <table><thead><tr><th>İş ID</th><th>Eser</th><th>Politika</th><th>Durum</th><th>Parça</th><th>Sağlayıcı</th><th>Karakter</th></tr></thead>
+                <tbody>%s</tbody></table>
+                """.formatted(satirlar);
+        return layout("Kuyruk", "kuyruk", govde);
+    }
+
+    public static String islemler(String nonce, String mesaj) {
+        String alert = mesaj == null || mesaj.isBlank() ? "" : "<div class=\"alert\">" + WebGuvenlikService.htmlKacis(mesaj) + "</div>";
+        String govde = alert + """
+                <h2>Güvenli İşlemler</h2>
+                <p>Yalnızca salt okunur veya idempotent işlemler. Shell komutu çalıştırılmaz.</p>
+                <form method="post" action="/islemler" style="margin:.75rem 0">
+                  <input type="hidden" name="nonce" value="%s">
+                  <input type="hidden" name="aksiyon" value="kalite-yenile">
+                  <button class="btn" type="submit">Kalite panelini yeniden oluştur</button>
+                </form>
+                <form method="post" action="/islemler" style="margin:.75rem 0">
+                  <input type="hidden" name="nonce" value="%s">
+                  <input type="hidden" name="aksiyon" value="sistem-yenile">
+                  <button class="btn secondary" type="submit">Sistem durumunu yenile</button>
+                </form>
+                <form method="post" action="/islemler" style="margin:.75rem 0">
+                  <input type="hidden" name="nonce" value="%s">
+                  <input type="hidden" name="aksiyon" value="eser-tara">
+                  <button class="btn secondary" type="submit">Eser listesini yeniden tara</button>
+                </form>
+                """.formatted(nonce, nonce, nonce);
+        return layout("Güvenli İşlemler", "islemler", govde);
+    }
+
+    public static String docs(List<String> dosyalar) {
+        StringBuilder links = new StringBuilder();
+        for (String d : dosyalar) {
+            links.append("<li><a href=\"/docs/").append(WebGuvenlikService.htmlKacis(d)).append("\">")
+                    .append(WebGuvenlikService.htmlKacis(d)).append("</a></li>");
+        }
+        return layout("Dokümantasyon", "docs", "<h2>Dokümantasyon</h2><ul>" + links + "</ul>");
+    }
+
+    public static String docIcerik(String ad, String icerik) {
+        return layout(ad, "docs", "<h2>" + WebGuvenlikService.htmlKacis(ad)
+                + "</h2><pre>" + WebGuvenlikService.htmlKacis(icerik) + "</pre>");
+    }
+
+    public static String telaffuz(String json) {
+        return layout("Telaffuz", "telaffuz", "<h2>Telaffuz Notları</h2><pre>"
+                + WebGuvenlikService.htmlKacis(json) + "</pre><p>Canlı pronunciation API bu adımda kullanılmaz.</p>");
+    }
+
+    public record DashboardVeri(String guncelleme, int toplamEser, int metadataHazir, int kontrolGerek,
+                                int ttsHazir, int ttsTamam, int onizleme, int buyukEser,
+                                String elevenLabs, String piper, boolean ffmpeg, boolean excel) {
+    }
+}
