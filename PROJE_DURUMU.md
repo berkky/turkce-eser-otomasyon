@@ -1,24 +1,55 @@
-# Proje Durumu — Adım 31
+# Proje Durumu — Adım 32
 
-## Tamamlanan çekirdekler
+## Adım özeti (1–31)
 
-- Kaynak alımı, arşiv, metadata, TTS kuyruğu
-- ElevenLabs önizleme, telaffuz, maliyet planı (Adım 28)
-- Mock forced alignment, SRT/VTT, okuma takibi (Adım 29)
-- Gerçek ElevenLabs forced alignment API kapısı (Adım 30)
-- **Onaylı tam eser üretim planı, onay taslağı ve güvenli kuyruk (Adım 31)**
-- Yerel web MVP (localhost:8787)
+| Adım | Konu |
+|------|------|
+| 1–20 | Kaynak alma, arşiv, metadata, TTS kuyruk |
+| 21–23 | Geriye dönük test, metadata güvenlik |
+| 24–25 | ElevenLabs, ses kalite paneli |
+| 26–27 | Web MVP, patron demo |
+| 28 | Önizleme, telaffuz, maliyet planı |
+| 29–30 | Alignment, gerçek API kapısı |
+| 31 | Tam eser üretim planı / onay / kuyruk |
+
+## Mevcut final durum (Adım 32)
+
+- **Teslim hazırlığı tamam** — yeni özellik eklenmedi
+- `final-release-check.ps1` tek komut kalite kapısı
+- `check-secrets.ps1` secret scan
+- `FINAL_*.md` teslim dokümantasyonu
+- Patron demo paketi final notlar içerir
+- `/demo` Adım 32 kalite paneli
+
+## Demo hazır
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\web-panel.ps1
+# http://127.0.0.1:8787/demo
+powershell -ExecutionPolicy Bypass -File .\patron-demo-paketi.ps1
+```
+
+## Gerçek API gerektiren alanlar
+
+- ElevenLabs önizleme (ESER-00005, kısa, onaylı)
+- Forced alignment (`-GercekApiOnayli`)
+- Tam eser TTS: **henüz kapalı** (plan/kuyruk only)
+
+## Kredi yokken davranış
+
+- Mock mod aktif
+- Plan ENGELLI/ORTA risk gösterir
+- Üretim başlamaz
+- Demo fixture ile alignment gösterilebilir
 
 ## Doğrulama
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\adim31-self-test.ps1
-powershell -ExecutionPolicy Bypass -File .\tam-eser-plan.ps1 -EserId 5
-powershell -ExecutionPolicy Bypass -File .\tam-eser-kuyruga-al.ps1 -EserId 5 -Onayli
-powershell -ExecutionPolicy Bypass -File .\patron-demo-paketi.ps1
-powershell -ExecutionPolicy Bypass -File .\web-panel.ps1
+powershell -ExecutionPolicy Bypass -File .\adim32-self-test.ps1
+powershell -ExecutionPolicy Bypass -File .\final-release-check.ps1
+powershell -ExecutionPolicy Bypass -File .\check-secrets.ps1
 ```
 
-## Sonraki adım (32)
+## Teslim için kalan
 
-Onaylı kuyruktan manuel CLI ile sınırlı tam eser TTS pilotu (ESER-00005); ESER-00006 ek kapılar.
+**Adım 33** — ZIP paketi ve gönderim.

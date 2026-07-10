@@ -202,7 +202,8 @@ public final class YerelWebSunucu {
         if (path.equals("/docs")) {
             return WebResponse.htmlOk(WebTemplateService.docs(List.of(
                     "README.md", "PROJE_DURUMU.md", "ADIM_26_MIMARI.md", "ADIM_27_MIMARI.md", "ADIM_28_MIMARI.md", "ADIM_29_MIMARI.md",
-                    "ADIM_30_MIMARI.md", "ADIM_31_MIMARI.md",
+                    "ADIM_30_MIMARI.md", "ADIM_31_MIMARI.md", "ADIM_32_MIMARI.md",
+                    "FINAL_RELEASE_NOTES.md", "FINAL_KURULUM_REHBERI.md",
                     "DEMO_SENARYOSU.md", "IS_MODELI_NOTU.md", "TTS_ARASTIRMA_VE_YOL_HARITASI.md")));
         }
         if (path.startsWith("/docs/")) {
@@ -330,6 +331,7 @@ public final class YerelWebSunucu {
         var adim29 = demoAdim29Durumu();
         var adim30 = demoAdim30Durumu();
         var adim31 = demoAdim31Durumu();
+        var adim32 = demoAdim32Durumu();
         var veri = new WebTemplateService.DemoSayfaVeri(
                 DemoDegerOnerisiService.DEGER_ONERISI,
                 DemoGuvenlikService.simulasyonNotu(),
@@ -343,7 +345,8 @@ public final class YerelWebSunucu {
                 adim28,
                 adim29,
                 adim30,
-                adim31
+                adim31,
+                adim32
         );
         return WebTemplateService.demo(veri);
     }
@@ -371,6 +374,26 @@ public final class YerelWebSunucu {
                 ? "Tam eser üretim planı hazır — onay ve kuyruk kapısı aktif; TTS başlatılmaz."
                 : "Üretim planı oluşturulabilir — maliyet/kredi kontrolü ve onay zorunlu.";
         return new WebTemplateService.Adim31Bolum(plan5, true, mesaj);
+    }
+
+    private WebTemplateService.Adim32Bolum demoAdim32Durumu() throws Exception {
+        FinalReleaseDurumService.FinalDurum rapor = FinalReleaseDurumService.oku();
+        DemoRaporService.PaketDurumu paket = demoRapor.durum();
+        String mesaj = rapor.mesaj();
+        if (rapor.raporMevcutVeBasarili()) {
+            mesaj = "Sürüm " + rapor.version() + " — final kalite kapısı geçti.";
+            if (!rapor.commitHash().isBlank()) {
+                mesaj += " Commit: " + rapor.commitHash() + ".";
+            }
+        }
+        return new WebTemplateService.Adim32Bolum(
+                rapor.regressionPassed() || rapor.raporMevcutVeBasarili(),
+                paket.mevcut(),
+                rapor.secretScanPassed(),
+                true,
+                true,
+                mesaj
+        );
     }
 
     private String uretimSayfa() throws Exception {

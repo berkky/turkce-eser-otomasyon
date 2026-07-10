@@ -52,6 +52,7 @@ public final class DemoDegerOnerisiService {
                         "Mock forced alignment ve okuma takibi (Adım 29)",
                         "Gerçek forced alignment API kapısı (Adım 30)",
                         "Onaylı tam eser üretim planı ve kuyruk kapısı (Adım 31)",
+                        "Final release kalite kapısı ve teslim dokümantasyonu (Adım 32)",
                         "GitHub kayıtlı açık kaynak proje"
                 ),
                 List.of(
@@ -69,7 +70,7 @@ public final class DemoDegerOnerisiService {
                 "Büyük eserlerde TTS maliyeti yüksek — önizleme zorunlu",
                 "Metadata KONTROL_GEREKIYOR kayıtları insan onayı bekler",
                 "Telif/lisans her eser için ayrı değerlendirilmeli",
-                "Sonraki adım: onaylı manuel tam eser TTS çalıştırma (Adım 32)"
+                "Sonraki adım: teslim ZIP paketi (Adım 33)"
         );
     }
 }

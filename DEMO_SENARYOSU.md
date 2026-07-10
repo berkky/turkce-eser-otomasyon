@@ -82,7 +82,8 @@ powershell -ExecutionPolicy Bypass -File .\elevenlabs-alignment.ps1 -EserId 5 -M
 ### 9. Kapanış (30 sn)
 
 - Önce/sonra karşılaştırması
-- Sonraki adım: manuel tam eser TTS pilotu (Adım 32)
+- Final kalite: `final-release-check.ps1`
+- Sonraki adım: teslim ZIP (Adım 33)
 - **DUR:** Soru-cevap
 
 ## ElevenLabs Kredisi Yoksa

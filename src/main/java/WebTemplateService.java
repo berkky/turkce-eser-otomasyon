@@ -30,7 +30,7 @@ public final class WebTemplateService {
                   <main>
                     %s
                   </main>
-                  <footer>Eser Otomasyon · Adım 31 · API anahtarları asla gösterilmez</footer>
+                  <footer>Eser Otomasyon · Adım 32 · API anahtarları asla gösterilmez</footer>
                   <script src="/assets/app.js"></script>
                 </body>
                 </html>
@@ -439,6 +439,21 @@ public final class WebTemplateService {
                      <a class="btn secondary" href="/api/uretim-kuyruk">Kuyruk JSON</a></p>
                   <div class="alert">Tam üretim varsayılan kapalı — web panelden gerçek TTS başlatılamaz.</div>
                 </div>
+                <h2>Adım 32: Final Demo Ready — Kalite Kapısı</h2>
+                <div class="demo-eser-box">
+                  <p><strong>Final Demo Ready</strong> — %s</p>
+                  <ul>
+                    <li>Test suite: %s</li>
+                    <li>Demo paketi: %s</li>
+                    <li>Secret scan: %s</li>
+                    <li>Tam üretim: kapalı (varsayılan)</li>
+                    <li>Gerçek API: yalnızca açık onaylı komutla</li>
+                  </ul>
+                  <p><a class="btn secondary" href="%s" target="_blank" rel="noopener">GitHub</a>
+                     <a class="btn secondary" href="/docs/FINAL_RELEASE_NOTES.md">Release notları</a>
+                     <a class="btn secondary" href="/docs/FINAL_KURULUM_REHBERI.md">Kurulum</a></p>
+                  <div class="alert ok">Bilgilendirme paneli — webden test çalıştırılmaz. Komut: <code>final-release-check.ps1</code></div>
+                </div>
                 <h2>Örnek Eserler</h2>
                 <div class="cards">%s</div>
                 <h2>Önce / Sonra</h2>
@@ -472,6 +487,11 @@ public final class WebTemplateService {
                 WebGuvenlikService.htmlKacis(v.adim29().mesaj()),
                 WebGuvenlikService.htmlKacis(v.adim30().mesaj()),
                 WebGuvenlikService.htmlKacis(v.adim31().mesaj()),
+                WebGuvenlikService.htmlKacis(v.adim32().mesaj()),
+                v.adim32().testSuiteGecti() ? "<span class=\"badge ok\">GEÇTİ</span>" : "<span class=\"badge warn\">BEKLİYOR</span>",
+                v.adim32().demoPaketiMevcut() ? "<span class=\"badge ok\">MEVCUT</span>" : "<span class=\"badge warn\">YOK</span>",
+                v.adim32().secretScanTemiz() ? "<span class=\"badge ok\">TEMİZ</span>" : "<span class=\"badge warn\">KONTROL ET</span>",
+                DemoGuvenlikService.GITHUB_URL,
                 ornekEserler, once, sonra, yapildi, kaldi, uyarilar,
                 v.riskler().stream().map(r -> "<li>" + WebGuvenlikService.htmlKacis(r) + "</li>").reduce("", String::concat));
         return layout("Patron Demo", "demo", govde);
@@ -732,6 +752,16 @@ public final class WebTemplateService {
     public record Adim31Bolum(boolean planHazir, boolean uretimKapali, String mesaj) {
     }
 
+    public record Adim32Bolum(
+            boolean testSuiteGecti,
+            boolean demoPaketiMevcut,
+            boolean secretScanTemiz,
+            boolean tamUretimKapali,
+            boolean gercekApiOnayli,
+            String mesaj
+    ) {
+    }
+
     public record DemoSayfaVeri(
             String degerOnerisi, String simulasyonNotu,
             DemoMetrikService.DemoMetrikler metrikler,
@@ -742,7 +772,8 @@ public final class WebTemplateService {
             Adim28Bolum adim28,
             Adim29Bolum adim29,
             Adim30Bolum adim30,
-            Adim31Bolum adim31
+            Adim31Bolum adim31,
+            Adim32Bolum adim32
     ) {
     }
 

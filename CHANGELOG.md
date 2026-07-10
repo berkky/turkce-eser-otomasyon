@@ -1,5 +1,13 @@
 # Değişiklik Günlüğü
 
+## 32.0.0 — Final release kalite kapısı
+- `final-release-check.ps1` tek komut teslim doğrulaması.
+- `check-secrets.ps1` API anahtarı taraması.
+- `FINAL_*.md` teslim dokümantasyonu.
+- `/demo` Adım 32 Final Demo Ready paneli.
+- Patron paketine final notlar eklendi.
+- `Adim32Dogrulama`, `adim32-self-test.ps1`, `ADIM_32_MIMARI.md`.
+
 ## 31.0.0 — Onaylı tam eser üretim kapısı ve maliyet kuyruğu
 - `TamEserUretim*` plan/onay/kuyruk modeli ve servisleri.
 - `production-approvals/` altında güvenli JSON (.partial + rename).

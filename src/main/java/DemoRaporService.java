@@ -66,7 +66,25 @@ public final class DemoRaporService {
         Files.writeString(klasor.resolve("sonraki-adimlar.md"), sonrakiAdimlarMd(), StandardCharsets.UTF_8);
         Files.writeString(klasor.resolve("github-ve-kurulum.md"), githubKurulumMd(), StandardCharsets.UTF_8);
 
-        return new PaketSonucu(klasor, beklenenDosyalar());
+        kopyalaFinalDosya(klasor, "FINAL_RELEASE_NOTES.md", "final-release-notlari.md");
+        kopyalaFinalDosya(klasor, "FINAL_GUVENLIK_NOTLARI.md", "final-guvenlik-ozeti.md");
+        kopyalaFinalDosya(klasor, "FINAL_DEMO_AKISI.md", "final-demo-akisi.md");
+
+        var tumDosyalar = new java.util.ArrayList<>(beklenenDosyalar());
+        tumDosyalar.addAll(finalDosyalar());
+        return new PaketSonucu(klasor, tumDosyalar);
+    }
+
+    public static List<String> finalDosyalar() {
+        return List.of("final-release-notlari.md", "final-guvenlik-ozeti.md", "final-demo-akisi.md");
+    }
+
+    private void kopyalaFinalDosya(Path klasor, String kaynakAd, String hedefAd) throws Exception {
+        Path kaynak = ortam.projeKlasoru().resolve(kaynakAd);
+        if (Files.isRegularFile(kaynak)) {
+            Files.copy(kaynak, klasor.resolve(hedefAd),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     public static List<String> beklenenDosyalar() {
@@ -96,6 +114,11 @@ public final class DemoRaporService {
         sb.append("- Telaffuz sözlüğü: yerel JSON + METIN_NORMALIZE\n");
         sb.append("- Tam eser üretimi: KAPALI (web panelinden başlatılamaz)\n");
         sb.append("- Büyük eser (ESER-00006): maliyet onayı şart\n\n");
+        sb.append("## Adım 32 — Final Release Kalite Kapısı\n\n");
+        sb.append("- Tek komut kalite kontrolü: `final-release-check.ps1`\n");
+        sb.append("- Secret scan: `check-secrets.ps1`\n");
+        sb.append("- Teslim dokümantasyonu (FINAL_*.md)\n");
+        sb.append("- Tam üretim ve gerçek API varsayılan kapalı\n\n");
         sb.append("## Adım 31 — Onaylı Tam Eser Üretim Kapısı\n\n");
         sb.append("- Plan + onay taslağı + kuyruk kaydı (production-approvals/)\n");
         sb.append("- Gerçek TTS üretimi başlatılmaz — varsayılan kapalı\n");
@@ -211,7 +234,9 @@ public final class DemoRaporService {
                 - Derleme: `mvn -q -DskipTests compile`
                 - Web panel: `powershell -ExecutionPolicy Bypass -File .\\web-panel.ps1`
                 - Demo sayfası: http://127.0.0.1:8787/demo
-                - Self-test: `powershell -ExecutionPolicy Bypass -File .\\adim29-self-test.ps1`
+                - Self-test: `powershell -ExecutionPolicy Bypass -File .\\adim32-self-test.ps1`
+                - Final kontrol: `powershell -ExecutionPolicy Bypass -File .\\final-release-check.ps1`
+                - Secret scan: `powershell -ExecutionPolicy Bypass -File .\\check-secrets.ps1`
                 - Demo paketi: `powershell -ExecutionPolicy Bypass -File .\\patron-demo-paketi.ps1`
                 
                 API anahtarları ortam değişkenlerinden okunur; hiçbir ekranda gösterilmez.
