@@ -119,6 +119,13 @@ public final class YerelWebSunucu {
             int id = parseId(path.substring("/api/tts-plan/".length()));
             return WebResponse.jsonOk(new TtsMaliyetPlanService(ortam).json(id));
         }
+        if (path.startsWith("/api/uretim-plan/") && "GET".equals(method)) {
+            int id = parseId(path.substring("/api/uretim-plan/".length()));
+            return WebResponse.jsonOk(new TamEserUretimPlanService(ortam).json(id));
+        }
+        if (path.equals("/api/uretim-kuyruk") && "GET".equals(method)) {
+            return WebResponse.jsonOk(new TamEserUretimKuyrukService(ortam).jsonListe());
+        }
         if (path.equals("/api/telaffuz") && "GET".equals(method)) {
             return WebResponse.jsonOk(kalitePanel.telaffuzJson());
         }
@@ -165,6 +172,10 @@ public final class YerelWebSunucu {
                 int id = parseId(eserPath.replace("/alignment", ""));
                 return WebResponse.htmlOk(eserAlignmentSayfa(id));
             }
+            if (eserPath.endsWith("/uretim")) {
+                int id = parseId(eserPath.replace("/uretim", ""));
+                return WebResponse.htmlOk(eserUretimSayfa(id));
+            }
             int id = parseId(eserPath);
             WebEserService.WebEserDetay d = new WebEserService(ortam).eserDetay(id);
             if (d == null) {
@@ -191,6 +202,7 @@ public final class YerelWebSunucu {
         if (path.equals("/docs")) {
             return WebResponse.htmlOk(WebTemplateService.docs(List.of(
                     "README.md", "PROJE_DURUMU.md", "ADIM_26_MIMARI.md", "ADIM_27_MIMARI.md", "ADIM_28_MIMARI.md", "ADIM_29_MIMARI.md",
+                    "ADIM_30_MIMARI.md", "ADIM_31_MIMARI.md",
                     "DEMO_SENARYOSU.md", "IS_MODELI_NOTU.md", "TTS_ARASTIRMA_VE_YOL_HARITASI.md")));
         }
         if (path.startsWith("/docs/")) {
@@ -203,6 +215,9 @@ public final class YerelWebSunucu {
         }
         if (path.equals("/alignment")) {
             return WebResponse.htmlOk(alignmentSayfa());
+        }
+        if (path.equals("/uretim")) {
+            return WebResponse.htmlOk(uretimSayfa());
         }
         if (path.equals("/demo")) {
             return WebResponse.htmlOk(demoSayfa());
@@ -314,6 +329,7 @@ public final class YerelWebSunucu {
         var adim28 = demoAdim28Durumu();
         var adim29 = demoAdim29Durumu();
         var adim30 = demoAdim30Durumu();
+        var adim31 = demoAdim31Durumu();
         var veri = new WebTemplateService.DemoSayfaVeri(
                 DemoDegerOnerisiService.DEGER_ONERISI,
                 DemoGuvenlikService.simulasyonNotu(),
@@ -326,7 +342,8 @@ public final class YerelWebSunucu {
                 DemoDegerOnerisiService.risklerVeSonraki(),
                 adim28,
                 adim29,
-                adim30
+                adim30,
+                adim31
         );
         return WebTemplateService.demo(veri);
     }
@@ -345,6 +362,33 @@ public final class YerelWebSunucu {
             mesaj = "Gerçek API beklemede (" + el.mesaj() + "); mock/demo fixture kullanılabilir.";
         }
         return new WebTemplateService.Adim30Bolum(el.hazir(), true, mesaj);
+    }
+
+    private WebTemplateService.Adim31Bolum demoAdim31Durumu() throws Exception {
+        TamEserUretimStorageService depo = new TamEserUretimStorageService(ortam.kuyruk());
+        boolean plan5 = depo.planVarMi(5);
+        String mesaj = plan5
+                ? "Tam eser üretim planı hazır — onay ve kuyruk kapısı aktif; TTS başlatılmaz."
+                : "Üretim planı oluşturulabilir — maliyet/kredi kontrolü ve onay zorunlu.";
+        return new WebTemplateService.Adim31Bolum(plan5, true, mesaj);
+    }
+
+    private String uretimSayfa() throws Exception {
+        TamEserUretimPlanService planSvc = new TamEserUretimPlanService(ortam);
+        TamEserUretimStorageService depo = new TamEserUretimStorageService(ortam.kuyruk());
+        TamEserUretimPlani p5 = planSvc.planGetir(5);
+        TamEserUretimPlani p6 = planSvc.planGetir(6);
+        TamEserUretimKuyrukKaydi k5 = depo.kuyrukOku(5);
+        return WebTemplateService.uretimGenel(p5, p6, k5, islemService.yeniNonce());
+    }
+
+    private String eserUretimSayfa(int eserId) throws Exception {
+        TamEserUretimPlanService planSvc = new TamEserUretimPlanService(ortam);
+        TamEserUretimStorageService depo = new TamEserUretimStorageService(ortam.kuyruk());
+        TamEserUretimPlani plan = planSvc.planGetir(eserId);
+        TamEserUretimOnayi onay = depo.onayOku(eserId);
+        TamEserUretimKuyrukKaydi kuyruk = depo.kuyrukOku(eserId);
+        return WebTemplateService.eserUretim(eserId, plan, onay, kuyruk, islemService.yeniNonce());
     }
 
     private WebTemplateService.Adim29Bolum demoAdim29Durumu() throws Exception {

@@ -1,5 +1,12 @@
 # Değişiklik Günlüğü
 
+## 31.0.0 — Onaylı tam eser üretim kapısı ve maliyet kuyruğu
+- `TamEserUretim*` plan/onay/kuyruk modeli ve servisleri.
+- `production-approvals/` altında güvenli JSON (.partial + rename).
+- Scriptler: `tam-eser-plan.ps1`, `tam-eser-onay-taslagi.ps1`, `tam-eser-kuyruga-al.ps1`.
+- Web: `/uretim`, `/api/uretim-plan/{id}`, `/api/uretim-kuyruk`; gerçek TTS yok.
+- `Adim31Dogrulama`, `adim31-self-test.ps1`, `ADIM_31_MIMARI.md`.
+
 ## 30.0.0 — Gerçek forced alignment API kapısı
 - ElevenLabs `POST /v1/forced-alignment` multipart istemci (`AlignmentApiClient`).
 - `-GercekApiOnayli` açık onay; web panelden gerçek API kapalı.

@@ -65,16 +65,24 @@ powershell -ExecutionPolicy Bypass -File .\elevenlabs-alignment.ps1 -EserId 5 -M
 - Demo fixture ile patrona VTT/segment gösterilir
 - Gerçek preview varsa: `elevenlabs-alignment.ps1 -EserId 5 -GercekApiOnayli`
 
-### 7. Güvenlik ve ürünleşme (60 sn) — `/sistem` veya `/demo` güvenlik bölümü
+### 7. Adım 31 — Üretim kapısı (45 sn) — `/uretim`
+
+> "Tam eser üretimi artık planlanabilir — maliyet ve kredi kontrol edilir, onay olmadan başlamaz."
+
+- `/eser/5/uretim` — düşük/orta risk plan
+- `/eser/6/uretim` — yüksek risk uyarısı
+- `tam-eser-plan.ps1` / `tam-eser-kuyruga-al.ps1 -Onayli` — gerçek TTS **başlamaz**
+
+### 8. Güvenlik ve ürünleşme (60 sn) — `/sistem` veya `/demo` güvenlik bölümü
 
 - Localhost only, API anahtarları gizli
 - Metadata KONTROL_GEREKIYOR = güvenlik bilinçli tasarım
 - GitHub: https://github.com/berkky/turkce-eser-otomasyon
 
-### 7. Kapanış (30 sn)
+### 9. Kapanış (30 sn)
 
 - Önce/sonra karşılaştırması
-- Sonraki adım: onaylı tam eser üretimi (Adım 30)
+- Sonraki adım: manuel tam eser TTS pilotu (Adım 32)
 - **DUR:** Soru-cevap
 
 ## ElevenLabs Kredisi Yoksa

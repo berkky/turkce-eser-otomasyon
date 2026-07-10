@@ -50,10 +50,12 @@ public final class DemoDegerOnerisiService {
                         "Kalite paneli ve web MVP",
                         "Telaffuz sözlüğü ve maliyet planı (Adım 28)",
                         "Mock forced alignment ve okuma takibi (Adım 29)",
+                        "Gerçek forced alignment API kapısı (Adım 30)",
+                        "Onaylı tam eser üretim planı ve kuyruk kapısı (Adım 31)",
                         "GitHub kayıtlı açık kaynak proje"
                 ),
                 List.of(
-                        "Canlı ElevenLabs tam eser üretimi (onaylı)",
+                        "Canlı ElevenLabs tam eser TTS üretimi (manuel Adım 32+)",
                         "Telaffuz sözlüğü düzenleme UI (canlı)",
                         "Gerçek ElevenLabs forced alignment API",
                         "Bulut dağıtım ve çok kullanıcı desteği",
@@ -67,7 +69,7 @@ public final class DemoDegerOnerisiService {
                 "Büyük eserlerde TTS maliyeti yüksek — önizleme zorunlu",
                 "Metadata KONTROL_GEREKIYOR kayıtları insan onayı bekler",
                 "Telif/lisans her eser için ayrı değerlendirilmeli",
-                "Sonraki adım: onaylı tam eser üretim akışı (Adım 30+)"
+                "Sonraki adım: onaylı manuel tam eser TTS çalıştırma (Adım 32)"
         );
     }
 }

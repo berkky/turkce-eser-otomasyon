@@ -30,7 +30,7 @@ public final class WebTemplateService {
                   <main>
                     %s
                   </main>
-                  <footer>Eser Otomasyon · Adım 30 · API anahtarları asla gösterilmez</footer>
+                  <footer>Eser Otomasyon · Adım 31 · API anahtarları asla gösterilmez</footer>
                   <script src="/assets/app.js"></script>
                 </body>
                 </html>
@@ -48,7 +48,8 @@ public final class WebTemplateService {
                 {"/islemler", "islemler", "Güvenli İşlemler"},
                 {"/docs", "docs", "Dokümantasyon"},
                 {"/telaffuz", "telaffuz", "Telaffuz"},
-                {"/alignment", "alignment", "Alignment"}
+                {"/alignment", "alignment", "Alignment"},
+                {"/uretim", "uretim", "Üretim Kapısı"}
         };
         StringBuilder sb = new StringBuilder();
         for (String[] l : linkler) {
@@ -197,7 +198,8 @@ public final class WebTemplateService {
         String govde = "<h2>Ses Kalite Paneli</h2><p>En iyi öneri: "
                 + WebGuvenlikService.htmlKacis(rapor.enIyiOnerilenSaglayici()) + " / "
                 + WebGuvenlikService.htmlKacis(rapor.enIyiOnerilenModel()) + "</p>"
-                + kartlar + "<p><a href=\"/islemler\">Paneli yenile</a></p>";
+                + kartlar + "<p><a href=\"/islemler\">Paneli yenile</a> "
+                + "<a class=\"btn secondary\" href=\"/uretim\">Tam eser üretim kapısı</a></p>";
         return layout("Ses Kalite", "kalite", govde);
     }
 
@@ -328,6 +330,7 @@ public final class WebTemplateService {
                   <th>Uygulama modu</th><th>Önizlemede uygulanır?</th><th>EL Dictionary</th>
                 </tr></thead><tbody>%s</tbody></table>
                 <h3>JSON</h3><pre>%s</pre>
+                <p><a class="btn secondary" href="/uretim">Tam eser üretim kapısı</a></p>
                 """.formatted(satirlar, WebGuvenlikService.htmlKacis(json));
         return layout("Telaffuz", "telaffuz", govde);
     }
@@ -421,6 +424,21 @@ public final class WebTemplateService {
                      <a class="btn secondary" href="/api/alignment/5">API plan JSON</a></p>
                   <div class="alert">Web panelden gerçek API çağrısı yapılmaz. Komut: <code>elevenlabs-alignment.ps1 -EserId 5 -GercekApiOnayli</code></div>
                 </div>
+                <h2>Adım 31: Onaylı Tam Eser Üretim Kapısı</h2>
+                <div class="demo-eser-box">
+                  <p>%s</p>
+                  <ul>
+                    <li>Tam eser üretimi artık planlanabilir.</li>
+                    <li>Maliyet ve kredi kontrolü yapılır.</li>
+                    <li>Onay olmadan üretim başlamaz.</li>
+                    <li>Kuyruğa alınan iş manuel çalıştırma bekler.</li>
+                  </ul>
+                  <p><a class="btn secondary" href="/uretim">Üretim kapısı</a>
+                     <a class="btn secondary" href="/eser/5/uretim">ESER-00005 plan</a>
+                     <a class="btn secondary" href="/eser/6/uretim">ESER-00006 risk</a>
+                     <a class="btn secondary" href="/api/uretim-kuyruk">Kuyruk JSON</a></p>
+                  <div class="alert">Tam üretim varsayılan kapalı — web panelden gerçek TTS başlatılamaz.</div>
+                </div>
                 <h2>Örnek Eserler</h2>
                 <div class="cards">%s</div>
                 <h2>Önce / Sonra</h2>
@@ -453,6 +471,7 @@ public final class WebTemplateService {
                 v.adim28().onizlemeVar() ? v.adim28().audioHtml() : "",
                 WebGuvenlikService.htmlKacis(v.adim29().mesaj()),
                 WebGuvenlikService.htmlKacis(v.adim30().mesaj()),
+                WebGuvenlikService.htmlKacis(v.adim31().mesaj()),
                 ornekEserler, once, sonra, yapildi, kaldi, uyarilar,
                 v.riskler().stream().map(r -> "<li>" + WebGuvenlikService.htmlKacis(r) + "</li>").reduce("", String::concat));
         return layout("Patron Demo", "demo", govde);
@@ -565,7 +584,8 @@ public final class WebTemplateService {
                 <p><strong>Segment:</strong> %d · <strong>Kelime:</strong> %d</p>
                 <p><a class="btn" href="/eser/5/alignment">Okuma takibi</a>
                    <a class="btn secondary" href="/api/alignment/5">JSON plan</a>
-                   <a class="btn secondary" href="/api/alignment/5/subtitles?format=vtt">VTT</a></p>
+                   <a class="btn secondary" href="/api/alignment/5/subtitles?format=vtt">VTT</a>
+                   <a class="btn secondary" href="/uretim">Üretim kapısı</a></p>
                 <h3>ESER-00006 — Büyük eser</h3>
                 <p><strong>Durum:</strong> %s</p>
                 <p>%s</p>
@@ -709,6 +729,9 @@ public final class WebTemplateService {
     public record Adim30Bolum(boolean apiHazir, boolean gercekApiKapali, String mesaj) {
     }
 
+    public record Adim31Bolum(boolean planHazir, boolean uretimKapali, String mesaj) {
+    }
+
     public record DemoSayfaVeri(
             String degerOnerisi, String simulasyonNotu,
             DemoMetrikService.DemoMetrikler metrikler,
@@ -718,8 +741,150 @@ public final class WebTemplateService {
             List<String> uyarilar, List<String> riskler,
             Adim28Bolum adim28,
             Adim29Bolum adim29,
-            Adim30Bolum adim30
+            Adim30Bolum adim30,
+            Adim31Bolum adim31
     ) {
+    }
+
+    public static String uretimGenel(TamEserUretimPlani p5, TamEserUretimPlani p6,
+                                       TamEserUretimKuyrukKaydi k5, String nonce) {
+        String govde = """
+                <h2>Onaylı Tam Eser Üretim Kapısı</h2>
+                <div class="alert warn"><strong>Tam üretim varsayılan kapalı.</strong> Bu panel plan, onay taslağı ve kuyruk kaydı oluşturur. Gerçek TTS başlatılmaz.</div>
+                <h3>ESER-00005 — Kaşağı</h3>
+                %s
+                <p><a class="btn" href="/eser/5/uretim">ESER-00005 üretim planı</a>
+                   <a class="btn secondary" href="/api/uretim-plan/5">JSON</a></p>
+                <h3>ESER-00006 — Astronomi (yüksek risk)</h3>
+                %s
+                <p><a class="btn secondary" href="/eser/6/uretim">ESER-00006 risk planı</a>
+                   <a class="btn secondary" href="/api/uretim-plan/6">JSON</a></p>
+                <h3>Kuyruk kayıtları</h3>
+                <p><a class="btn secondary" href="/api/uretim-kuyruk">API JSON</a></p>
+                %s
+                <h3>Güvenli işlemler</h3>
+                %s
+                """.formatted(
+                planOzetHtml(p5),
+                planOzetHtml(p6),
+                kuyrukSatir(k5),
+                uretimFormlari(nonce));
+        return layout("Üretim Kapısı", "uretim", govde);
+    }
+
+    public static String eserUretim(int eserId, TamEserUretimPlani plan,
+                                    TamEserUretimOnayi onay, TamEserUretimKuyrukKaydi kuyruk, String nonce) {
+        String riskCls = switch (plan.riskSeviyesi()) {
+            case YUKSEK, ENGELLI -> "alert warn";
+            case ORTA -> "alert";
+            default -> "alert ok";
+        };
+        String uyari = plan.buyukEserMi()
+                ? "<div class=\"alert warn\"><strong>Yüksek risk — büyük eser.</strong> Maliyet/onay/limit kapısı zorunlu. Gerçek üretim kapalı.</div>"
+                : "";
+        String onayBlok = onay == null
+                ? "<p class=\"muted\">Onay taslağı henüz yok.</p>"
+                : "<p><strong>Onay ID:</strong> " + WebGuvenlikService.htmlKacis(onay.onayId())
+                + " · <strong>Durum:</strong> " + onay.onayDurumu() + "</p>"
+                + "<p>" + WebGuvenlikService.htmlKacis(onay.onayMetni()) + "</p>";
+        String kuyrukBlok = kuyruk == null
+                ? "<p class=\"muted\">Kuyruk kaydı yok.</p>"
+                : "<p><strong>Job:</strong> " + WebGuvenlikService.htmlKacis(kuyruk.jobId())
+                + " · <strong>Durum:</strong> " + kuyruk.status()
+                + " · <strong>Output:</strong> " + WebGuvenlikService.htmlKacis(kuyruk.outputSafeName()) + "</p>"
+                + "<p>" + WebGuvenlikService.htmlKacis(kuyruk.notlar()) + "</p>";
+        String govde = """
+                <h2>ESER-%s — Üretim Planı</h2>
+                %s
+                <div class="%s"><strong>Risk:</strong> %s · %s</div>
+                <div class="alert">Tam üretim varsayılan kapalı — onay olmadan başlatılmaz.</div>
+                <div class="cards">
+                  <div class="card"><span>Karakter</span><strong>%,d</strong></div>
+                  <div class="card"><span>TTS parça</span><strong>%d</strong></div>
+                  <div class="card"><span>Tahmini dk</span><strong>%d</strong></div>
+                  <div class="card"><span>Kredi ihtiyacı</span><strong>%d</strong></div>
+                </div>
+                <p><strong>Sağlayıcı:</strong> %s / %s · <strong>Kalan kredi:</strong> %d · <strong>Yeterli:</strong> %s</p>
+                <p><a class="btn secondary" href="/api/uretim-plan/%d">Plan JSON</a>
+                   <a class="btn secondary" href="/uretim">Genel panel</a></p>
+                <h3>Onay taslağı</h3>
+                %s
+                <h3>Kuyruk</h3>
+                %s
+                <h3>İşlemler (üretim başlatmaz)</h3>
+                %s
+                """.formatted(
+                String.format("%05d", eserId),
+                uyari,
+                riskCls,
+                plan.riskSeviyesi(),
+                WebGuvenlikService.htmlKacis(plan.onerilenAksiyon()),
+                plan.toplamKarakter(),
+                plan.ttsParcaSayisi(),
+                plan.tahminiDakika(),
+                plan.tahminiKrediIhtiyaci(),
+                WebGuvenlikService.htmlKacis(plan.secilenSaglayici()),
+                WebGuvenlikService.htmlKacis(plan.secilenModel()),
+                plan.kalanKredi(),
+                plan.krediYeterliMi() ? "Evet" : "Hayır",
+                eserId,
+                onayBlok,
+                kuyrukBlok,
+                uretimFormlariEser(eserId, nonce));
+        return layout("Eser " + eserId + " Üretim", "uretim", govde);
+    }
+
+    private static String planOzetHtml(TamEserUretimPlani p) {
+        if (p == null) {
+            return "<p class=\"muted\">Plan yok</p>";
+        }
+        String cls = p.riskSeviyesi() == TamEserUretimRisk.YUKSEK
+                || p.riskSeviyesi() == TamEserUretimRisk.ENGELLI ? "badge warn" : "badge ok";
+        return "<p><span class=\"" + cls + "\">" + p.riskSeviyesi() + "</span> "
+                + WebGuvenlikService.htmlKacis(p.onerilenAksiyon()) + "</p>"
+                + "<p>Karakter: " + p.toplamKarakter() + " · Parça: " + p.ttsParcaSayisi()
+                + " · Kredi: " + p.tahminiKrediIhtiyaci() + "</p>";
+    }
+
+    private static String kuyrukSatir(TamEserUretimKuyrukKaydi k) {
+        if (k == null) {
+            return "<p class=\"muted\">Henüz onaylı kuyruk kaydı yok (ESER-00005 örneği).</p>";
+        }
+        return "<p>ESER-" + String.format("%05d", k.eserId()) + " · " + k.status()
+                + " · " + WebGuvenlikService.htmlKacis(k.outputSafeName()) + "</p>";
+    }
+
+    private static String uretimFormlari(String nonce) {
+        return uretimFormlariEser(5, nonce) + uretimFormlariEser(6, nonce);
+    }
+
+    private static String uretimFormlariEser(int eserId, String nonce) {
+        return """
+                <div style="margin:.75rem 0;padding:.75rem;border:1px solid #2a3548;border-radius:8px">
+                  <strong>ESER-%s</strong>
+                  <form method="post" action="/islemler" style="margin:.5rem 0">
+                    <input type="hidden" name="nonce" value="%s">
+                    <input type="hidden" name="aksiyon" value="tam-eser-plan">
+                    <input type="hidden" name="eserId" value="%d">
+                    <button class="btn secondary" type="submit">Plan oluştur</button>
+                  </form>
+                  <form method="post" action="/islemler" style="margin:.5rem 0">
+                    <input type="hidden" name="nonce" value="%s">
+                    <input type="hidden" name="aksiyon" value="tam-eser-onay-taslagi">
+                    <input type="hidden" name="eserId" value="%d">
+                    <button class="btn secondary" type="submit">Onay taslağı oluştur</button>
+                  </form>
+                  <form method="post" action="/islemler" style="margin:.5rem 0">
+                    <input type="hidden" name="nonce" value="%s">
+                    <input type="hidden" name="aksiyon" value="tam-eser-kuyruga-al">
+                    <input type="hidden" name="eserId" value="%d">
+                    <input type="hidden" name="onayli" value="1">
+                    <button class="btn secondary" type="submit">Kuyruğa al (üretim başlamaz)</button>
+                  </form>
+                </div>
+                """.formatted(
+                String.format("%05d", eserId), nonce, eserId,
+                nonce, eserId, nonce, eserId);
     }
 
     public record DashboardVeri(String guncelleme, int toplamEser, int metadataHazir, int kontrolGerek,

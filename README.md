@@ -1,26 +1,27 @@
-# Türkçe Eser Otomasyonu — Adım 30
+# Türkçe Eser Otomasyonu — Adım 31
 
-## Gerçek Forced Alignment API Kapısı (Adım 30) + Önceki sürümler
+## Onaylı Tam Eser Üretim Kapısı (Adım 31) + Önceki sürümler
 
-## Bu sürümde yenilikler (Adım 30)
+## Bu sürümde yenilikler (Adım 31)
 
-- ElevenLabs `POST /v1/forced-alignment` multipart entegrasyonu
-- `-GercekApiOnayli` açık onay kapısı (varsayılan kapalı)
-- `AlignmentHata` güvenli hata modeli
-- `source`: ELEVENLABS / MOCK / DEMO_FIXTURE ayrımı
-- Web: alignment kaynağı, gerçek API durumu, son hata
-- `ADIM_30_MIMARI.md`
+- Tam eser üretim **planı** (maliyet/kredi/risk) — TTS başlatmaz
+- Onay taslağı ve güvenli kuyruk kaydı (`production-approvals/`)
+- ESER-00005: düşük/orta risk örneği; ESER-00006: yüksek risk
+- Web: `/uretim`, `/api/uretim-plan/{id}`, `/api/uretim-kuyruk`
+- `ADIM_31_MIMARI.md`
 
 ## Komutlar
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\adim30-self-test.ps1
-powershell -ExecutionPolicy Bypass -File .\elevenlabs-alignment.ps1 -EserId 5 -Mock -DemoFixture
-powershell -ExecutionPolicy Bypass -File .\elevenlabs-alignment.ps1 -EserId 5 -GercekApiOnayli
+powershell -ExecutionPolicy Bypass -File .\adim31-self-test.ps1
+powershell -ExecutionPolicy Bypass -File .\tam-eser-plan.ps1 -EserId 5
+powershell -ExecutionPolicy Bypass -File .\tam-eser-onay-taslagi.ps1 -EserId 5
+powershell -ExecutionPolicy Bypass -File .\tam-eser-kuyruga-al.ps1 -EserId 5 -Onayli
 powershell -ExecutionPolicy Bypass -File .\web-panel.ps1
 ```
 
-- Web: http://127.0.0.1:8787/alignment
-- Okuma takibi: http://127.0.0.1:8787/eser/5/alignment
+- Üretim kapısı: http://127.0.0.1:8787/uretim
+- ESER-00005: http://127.0.0.1:8787/eser/5/uretim
+- Demo: http://127.0.0.1:8787/demo
 
-Ayrıntılı mimari: `ADIM_30_MIMARI.md`
+Ayrıntılı mimari: `ADIM_31_MIMARI.md`

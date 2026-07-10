@@ -54,6 +54,9 @@ public final class WebIslemService {
             case "eser-tara" -> WebIslemSonucu.basarili("Eser listesi güncellendi.", "/eserler");
             case "elevenlabs-onizleme" -> elevenLabsOnizleme(form);
             case "alignment-mock" -> alignmentMock(form);
+            case "tam-eser-plan" -> tamEserPlan(form);
+            case "tam-eser-onay-taslagi" -> tamEserOnayTaslagi(form);
+            case "tam-eser-kuyruga-al" -> tamEserKuyrugaAl(form);
             default -> WebIslemSonucu.hatali("Bilinmeyen işlem: " + aksiyon);
         };
     }
@@ -104,6 +107,46 @@ public final class WebIslemService {
         return WebIslemSonucu.basarili(mesaj, "/eser/" + eserId + "/alignment");
     }
 
+    private WebIslemSonucu tamEserPlan(Map<String, String> form) throws Exception {
+        int eserId = parseEserId(form.get("eserId"));
+        if (eserId <= 0) {
+            return WebIslemSonucu.hatali("Geçersiz eser ID.");
+        }
+        TamEserUretimPlani plan = new TamEserUretimPlanService(ortam).planUret(eserId);
+        return WebIslemSonucu.basarili(
+                "Üretim planı oluşturuldu (risk: " + plan.riskSeviyesi() + "). Gerçek TTS başlatılmadı.",
+                "/eser/" + eserId + "/uretim");
+    }
+
+    private WebIslemSonucu tamEserOnayTaslagi(Map<String, String> form) throws Exception {
+        int eserId = parseEserId(form.get("eserId"));
+        if (eserId <= 0) {
+            return WebIslemSonucu.hatali("Geçersiz eser ID.");
+        }
+        try {
+            new TamEserUretimOnayService(ortam).taslakOlustur(eserId);
+            return WebIslemSonucu.basarili(
+                    "Onay taslağı oluşturuldu. Gerçek ses üretimi başlamadı.",
+                    "/eser/" + eserId + "/uretim");
+        } catch (IllegalStateException e) {
+            return WebIslemSonucu.hatali(e.getMessage());
+        }
+    }
+
+    private WebIslemSonucu tamEserKuyrugaAl(Map<String, String> form) throws Exception {
+        int eserId = parseEserId(form.get("eserId"));
+        boolean onayli = "1".equals(form.get("onayli")) || "true".equalsIgnoreCase(form.get("onayli"));
+        TamEserUretimKuyrukService.KuyrukSonucu sonuc = new TamEserUretimKuyrukService(ortam).kuyrugaAl(eserId, onayli);
+        if (!sonuc.basarili()) {
+            return WebIslemSonucu.hatali(sonuc.mesaj());
+        }
+        String mesaj = sonuc.mesaj() + " Üretim başlatılmadı.";
+        if (sonuc.buyukUyari()) {
+            mesaj += " Büyük eser uyarısı: gerçek üretim kapalı.";
+        }
+        return WebIslemSonucu.basarili(mesaj, "/eser/" + eserId + "/uretim");
+    }
+
     private static int parseEserId(String ham) {
         if (ham == null || ham.isBlank()) {
             return 0;
@@ -119,6 +162,7 @@ public final class WebIslemService {
         Files.createDirectories(ortam.metinArsivi());
         Files.createDirectories(ortam.sesArsivi());
         Files.createDirectories(ortam.kuyruk());
+        Files.createDirectories(TamEserUretimGuvenlikService.uretimKlasoru(ortam.kuyruk()));
         Files.createDirectories(ortam.kalitePanel());
         Files.createDirectories(ortam.sesArsivi().resolve("_alignment"));
     }

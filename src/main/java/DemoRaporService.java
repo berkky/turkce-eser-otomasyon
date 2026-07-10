@@ -96,6 +96,11 @@ public final class DemoRaporService {
         sb.append("- Telaffuz sözlüğü: yerel JSON + METIN_NORMALIZE\n");
         sb.append("- Tam eser üretimi: KAPALI (web panelinden başlatılamaz)\n");
         sb.append("- Büyük eser (ESER-00006): maliyet onayı şart\n\n");
+        sb.append("## Adım 31 — Onaylı Tam Eser Üretim Kapısı\n\n");
+        sb.append("- Plan + onay taslağı + kuyruk kaydı (production-approvals/)\n");
+        sb.append("- Gerçek TTS üretimi başlatılmaz — varsayılan kapalı\n");
+        sb.append("- ESER-00006: yüksek risk / BLOCKED kuyruk\n");
+        sb.append("- Web: /uretim, /api/uretim-plan/{id}, /api/uretim-kuyruk\n\n");
         sb.append("## Adım 30 — Gerçek Forced Alignment API Kapısı\n\n");
         sb.append("- Gerçek API: yalnızca -GercekApiOnayli + preview MP3 + preview-input.txt\n");
         sb.append("- Web panelden gerçek API çağrısı yapılmaz\n");
