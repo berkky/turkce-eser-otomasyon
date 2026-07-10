@@ -30,7 +30,7 @@ public final class WebTemplateService {
                   <main>
                     %s
                   </main>
-                  <footer>Eser Otomasyon · Adım 29 · API anahtarları asla gösterilmez</footer>
+                  <footer>Eser Otomasyon · Adım 30 · API anahtarları asla gösterilmez</footer>
                   <script src="/assets/app.js"></script>
                 </body>
                 </html>
@@ -414,6 +414,13 @@ public final class WebTemplateService {
                      <a class="btn secondary" href="/telaffuz">Telaffuz</a></p>
                   <div class="alert">Gerçek ElevenLabs forced alignment yalnızca açık onaylı komutla çalışır. Mock demo her zaman kullanılabilir.</div>
                 </div>
+                <h2>Adım 30: Gerçek Forced Alignment API Kapısı</h2>
+                <div class="demo-eser-box">
+                  <p>%s</p>
+                  <p><a class="btn secondary" href="/alignment">Alignment paneli</a>
+                     <a class="btn secondary" href="/api/alignment/5">API plan JSON</a></p>
+                  <div class="alert">Web panelden gerçek API çağrısı yapılmaz. Komut: <code>elevenlabs-alignment.ps1 -EserId 5 -GercekApiOnayli</code></div>
+                </div>
                 <h2>Örnek Eserler</h2>
                 <div class="cards">%s</div>
                 <h2>Önce / Sonra</h2>
@@ -445,6 +452,7 @@ public final class WebTemplateService {
                 WebGuvenlikService.htmlKacis(v.adim28().krediMesaj()),
                 v.adim28().onizlemeVar() ? v.adim28().audioHtml() : "",
                 WebGuvenlikService.htmlKacis(v.adim29().mesaj()),
+                WebGuvenlikService.htmlKacis(v.adim30().mesaj()),
                 ornekEserler, once, sonra, yapildi, kaldi, uyarilar,
                 v.riskler().stream().map(r -> "<li>" + WebGuvenlikService.htmlKacis(r) + "</li>").reduce("", String::concat));
         return layout("Patron Demo", "demo", govde);
@@ -546,19 +554,24 @@ public final class WebTemplateService {
     }
 
     public static String alignmentGenel(AlignmentPlan p5, AlignmentPlan p6, AlignmentResult r5, String nonce) {
+        String kaynak = r5.segmentCount() > 0 ? r5.kaynakEtiketi() : "Henüz üretilmedi";
         String govde = """
                 <h2>Ses-Metin Hizalama (Forced Alignment)</h2>
-                <div class="alert">Gerçek ElevenLabs forced alignment API yalnızca açık onaylı komutla çalışır. Mock alignment web panelden üretilebilir.</div>
+                <div class="alert">Gerçek ElevenLabs forced alignment API yalnızca açık onaylı komutla çalışır (-GercekApiOnayli). Mock alignment web panelden üretilebilir.</div>
+                <div class="alert warn">Web panelden gerçek API çağrısı yapılmaz.</div>
                 <h3>ESER-00005 — Kaşağı</h3>
                 <p><strong>Durum:</strong> %s · %s</p>
+                <p><strong>Kaynak:</strong> %s · <strong>Gerçek API:</strong> %s</p>
                 <p><strong>Segment:</strong> %d · <strong>Kelime:</strong> %d</p>
                 <p><a class="btn" href="/eser/5/alignment">Okuma takibi</a>
-                   <a class="btn secondary" href="/api/alignment/5">JSON plan</a></p>
+                   <a class="btn secondary" href="/api/alignment/5">JSON plan</a>
+                   <a class="btn secondary" href="/api/alignment/5/subtitles?format=vtt">VTT</a></p>
                 <h3>ESER-00006 — Büyük eser</h3>
                 <p><strong>Durum:</strong> %s</p>
                 <p>%s</p>
                 """.formatted(
                 WebGuvenlikService.htmlKacis(p5.status()), WebGuvenlikService.htmlKacis(p5.reason()),
+                WebGuvenlikService.htmlKacis(kaynak), r5.realApiUsed() ? "evet" : "hayır",
                 r5.segmentCount(), r5.wordCount(),
                 WebGuvenlikService.htmlKacis(p6.status()), WebGuvenlikService.htmlKacis(p6.reason()));
         return layout("Alignment", "alignment", govde);
@@ -583,11 +596,32 @@ public final class WebTemplateService {
         segmentler.append("</ul>");
 
         StringBuilder uyariBlok = new StringBuilder();
+        uyariBlok.append("<p><strong>Kaynak:</strong> ")
+                .append(WebGuvenlikService.htmlKacis(durum.kaynakEtiketi()))
+                .append(" · <strong>Gerçek API kullanıldı:</strong> ")
+                .append(durum.gercekApiUsed() ? "evet" : "hayır")
+                .append("</p>");
+        uyariBlok.append("<div class=\"alert warn\">")
+                .append(WebGuvenlikService.htmlKacis(durum.gercekApiKapaliNeden()))
+                .append("</div>");
         if (durum.demoFixture()) {
             uyariBlok.append("""
                     <div class="alert warn"><strong>Demo fixture alignment</strong> — gerçek ElevenLabs önizlemesi kullanılmadı.
                     Patron demosu için mock altyazı ve okuma takibi gösterilir.</div>
                     """);
+        } else if (durum.gercekApiUsed()) {
+            uyariBlok.append("""
+                    <div class="alert ok"><strong>Gerçek ElevenLabs alignment</strong> — forced alignment API yanıtından üretildi.</div>
+                    """);
+        } else if (sonuc.segmentCount() > 0) {
+            uyariBlok.append("""
+                    <div class="alert"><strong>Mock alignment</strong> — gerçek API çağrısı yapılmadı.</div>
+                    """);
+        }
+        if (durum.sonHataMesaji() != null && !durum.sonHataMesaji().isBlank()) {
+            uyariBlok.append("<div class=\"alert warn\"><strong>Son hata:</strong> ")
+                    .append(WebGuvenlikService.htmlKacis(durum.sonHataMesaji()))
+                    .append("</div>");
         }
         if (!durum.altyaziVar()) {
             uyariBlok.append("""
@@ -672,6 +706,9 @@ public final class WebTemplateService {
     public record Adim29Bolum(boolean onizlemeVar, boolean alignmentVar, boolean krediVar, String mesaj) {
     }
 
+    public record Adim30Bolum(boolean apiHazir, boolean gercekApiKapali, String mesaj) {
+    }
+
     public record DemoSayfaVeri(
             String degerOnerisi, String simulasyonNotu,
             DemoMetrikService.DemoMetrikler metrikler,
@@ -680,7 +717,8 @@ public final class WebTemplateService {
             DemoDegerOnerisiService.YapildiKaldi yapildiKaldi,
             List<String> uyarilar, List<String> riskler,
             Adim28Bolum adim28,
-            Adim29Bolum adim29
+            Adim29Bolum adim29,
+            Adim30Bolum adim30
     ) {
     }
 

@@ -45,8 +45,9 @@ Abartılı iddia yok: sistem "her kitabı yasal olarak seslendirir" demez.
 ## Gerekli Sonraki Yatırımlar
 
 1. Canlı ElevenLabs önizleme (Adım 28 — tamamlandı, onaylı kısa önizleme)
-2. Mock alignment ve okuma takibi (Adım 29 — tamamlandı; gerçek Forced Alignment API Adım 30)
-3. Lisans/hak yönetim modülü
+2. Mock alignment ve okuma takibi (Adım 29 — tamamlandı)
+3. Gerçek Forced Alignment API kapısı (Adım 30 — tamamlandı; webden kapalı)
+4. Lisans/hak yönetim modülü
 4. Telaffuz sözlüğü ve normalizasyon (Adım 28 ile başlandı)
 5. Bulut dağıtım ve kimlik doğrulama (isteğe bağlı)
 6. Tam eser üretim onay akışı ve maliyet tahmini UI

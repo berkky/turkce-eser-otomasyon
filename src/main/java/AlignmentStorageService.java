@@ -1,14 +1,17 @@
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Alignment dosya okuma/yazma — ses-arsivi/_alignment/
@@ -94,6 +97,66 @@ public final class AlignmentStorageService {
                 && audioHash.equals(kok.path("audioHash").asText(""));
     }
 
+    public enum PreviewKontrol {
+        TAMAM, ESER_YOK, MP3_YOK, METIN_YOK, SIFIR_BOYUT
+    }
+
+    public PreviewKontrol previewKontrol(int eserId) throws Exception {
+        Path eser = eserKlasoruBul(eserId);
+        if (eser == null) {
+            return PreviewKontrol.ESER_YOK;
+        }
+        Path oniz = eser.resolve("onizleme").resolve("elevenlabs");
+        Path mp3 = oniz.resolve("preview-elevenlabs.mp3");
+        Path metin = oniz.resolve("preview-input.txt");
+        if (!Files.isRegularFile(mp3)) {
+            return PreviewKontrol.MP3_YOK;
+        }
+        if (Files.size(mp3) < EN_AZ_MP3) {
+            return PreviewKontrol.SIFIR_BOYUT;
+        }
+        if (!Files.isRegularFile(metin)) {
+            return PreviewKontrol.METIN_YOK;
+        }
+        String icerik = Files.readString(metin, StandardCharsets.UTF_8).trim();
+        if (icerik.isBlank()) {
+            return PreviewKontrol.METIN_YOK;
+        }
+        return PreviewKontrol.TAMAM;
+    }
+
+    public void sonHataKaydet(int eserId, AlignmentHata hata) throws Exception {
+        if (hata == null) {
+            return;
+        }
+        Path klasor = alignmentKlasoru();
+        Files.createDirectories(klasor);
+        Path dosya = klasor.resolve(AlignmentGuvenlikService.guvenliDosyaAdi(eserId, "alignment.last-error.json"));
+        ObjectNode n = JSON.createObjectNode();
+        n.put("hataKodu", hata.hataKodu());
+        n.put("mesaj", hata.kullaniciMesaji());
+        n.put("retryable", hata.retryable());
+        n.put("providerStatusCode", hata.providerStatusCode());
+        n.put("zaman", OffsetDateTime.now().toString());
+        Files.writeString(dosya, JSON.writerWithDefaultPrettyPrinter().writeValueAsString(n),
+                StandardCharsets.UTF_8);
+    }
+
+    public Optional<AlignmentHata> sonHataOku(int eserId) throws Exception {
+        Path dosya = alignmentKlasoru()
+                .resolve(AlignmentGuvenlikService.guvenliDosyaAdi(eserId, "alignment.last-error.json"));
+        if (!Files.isRegularFile(dosya)) {
+            return Optional.empty();
+        }
+        JsonNode n = JSON.readTree(Files.readString(dosya, StandardCharsets.UTF_8));
+        return Optional.of(new AlignmentHata(
+                n.path("hataKodu").asText(""),
+                n.path("mesaj").asText(""),
+                true,
+                n.path("retryable").asBoolean(false),
+                n.path("providerStatusCode").asInt(0)));
+    }
+
     public AlignmentResult yukle(int eserId) throws Exception {
         Path json = alignmentJson(eserId);
         if (!Files.isRegularFile(json)) {
@@ -139,6 +202,11 @@ public final class AlignmentStorageService {
                 kok.path("srtSafeName").asText(""),
                 kok.path("vttSafeName").asText(""),
                 kok.path("demoFixture").asBoolean(false),
+                kok.path("realApiUsed").asBoolean(
+                        AlignmentResult.SOURCE_ELEVENLABS.equalsIgnoreCase(kok.path("source").asText(""))),
+                kok.path("apiProvider").asText(kok.path("provider").asText("")),
+                kok.path("apiRequestId").asText(""),
+                kok.path("generatedAt").asText(kok.path("createdAt").asText("")),
                 kok.path("createdAt").asText(""));
     }
 
@@ -165,6 +233,7 @@ public final class AlignmentStorageService {
         ozet.put("durationSeconds", sonuc.durationSeconds());
         ozet.put("source", sonuc.source());
         ozet.put("demoFixture", sonuc.demoFixture());
+        ozet.put("realApiUsed", sonuc.realApiUsed());
         Files.writeString(summary, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ozet),
                 StandardCharsets.UTF_8);
 

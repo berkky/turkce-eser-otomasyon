@@ -1,5 +1,11 @@
 # Değişiklik Günlüğü
 
+## 30.0.0 — Gerçek forced alignment API kapısı
+- ElevenLabs `POST /v1/forced-alignment` multipart istemci (`AlignmentApiClient`).
+- `-GercekApiOnayli` açık onay; web panelden gerçek API kapalı.
+- `AlignmentHata`, `source`/`realApiUsed`/`demoFixture` ayrımı.
+- `Adim30Dogrulama`, `adim30-self-test.ps1`, `ADIM_30_MIMARI.md`.
+
 ## 29.0.0 — Forced alignment ve okuma takibi
 - Mock forced alignment servisi ve `ses-arsivi/_alignment/` depolama.
 - SRT/VTT export, okuma takibi UI (`/eser/5/alignment`).

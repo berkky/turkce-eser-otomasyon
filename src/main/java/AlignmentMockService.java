@@ -68,7 +68,7 @@ public final class AlignmentMockService {
                 kaynak.eserId(),
                 kaynak.previewId(),
                 AlignmentPlan.STATUS_COMPLETED,
-                "MOCK",
+                demoFixture ? "MOCK" : "MOCK",
                 "tr",
                 textHash,
                 audioHash,
@@ -79,12 +79,16 @@ public final class AlignmentMockService {
                 true,
                 segmentler,
                 uyarilar,
-                "MOCK",
+                demoFixture ? AlignmentResult.SOURCE_DEMO_FIXTURE : AlignmentResult.SOURCE_MOCK,
                 AlignmentPlan.STATUS_COMPLETED,
                 outputName,
                 AlignmentGuvenlikService.guvenliDosyaAdi(kaynak.eserId(), "subtitles.srt"),
                 AlignmentGuvenlikService.guvenliDosyaAdi(kaynak.eserId(), "subtitles.vtt"),
                 demoFixture,
+                false,
+                demoFixture ? "DEMO_FIXTURE" : "MOCK",
+                "",
+                java.time.OffsetDateTime.now().toString(),
                 java.time.OffsetDateTime.now().toString());
     }
 

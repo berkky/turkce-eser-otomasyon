@@ -313,6 +313,7 @@ public final class YerelWebSunucu {
     private String demoSayfa() throws Exception {
         var adim28 = demoAdim28Durumu();
         var adim29 = demoAdim29Durumu();
+        var adim30 = demoAdim30Durumu();
         var veri = new WebTemplateService.DemoSayfaVeri(
                 DemoDegerOnerisiService.DEGER_ONERISI,
                 DemoGuvenlikService.simulasyonNotu(),
@@ -324,9 +325,26 @@ public final class YerelWebSunucu {
                 DemoGuvenlikService.uyarilar(),
                 DemoDegerOnerisiService.risklerVeSonraki(),
                 adim28,
-                adim29
+                adim29,
+                adim30
         );
         return WebTemplateService.demo(veri);
+    }
+
+    private WebTemplateService.Adim30Bolum demoAdim30Durumu() throws Exception {
+        var el = ElevenLabsFabrika.durumOzeti();
+        AlignmentResult sonuc = new AlignmentService(ortam.sesArsivi()).sonuc(5);
+        String mesaj;
+        if (sonuc.realApiUsed()) {
+            mesaj = "Gerçek ElevenLabs alignment mevcut — " + sonuc.segmentCount() + " segment.";
+        } else if (sonuc.demoFixture()) {
+            mesaj = "Demo fixture alignment aktif; gerçek API kapısı hazır.";
+        } else if (el.hazir()) {
+            mesaj = "API hazır — gerçek alignment yalnızca -GercekApiOnayli ile çalıştırılır.";
+        } else {
+            mesaj = "Gerçek API beklemede (" + el.mesaj() + "); mock/demo fixture kullanılabilir.";
+        }
+        return new WebTemplateService.Adim30Bolum(el.hazir(), true, mesaj);
     }
 
     private WebTemplateService.Adim29Bolum demoAdim29Durumu() throws Exception {

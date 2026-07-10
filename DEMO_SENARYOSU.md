@@ -57,7 +57,15 @@ powershell -ExecutionPolicy Bypass -File .\elevenlabs-alignment.ps1 -EserId 5 -M
 - Segment listesi + SRT/VTT export linkleri
 - Kredi yoksa: "Gerçek API beklemede; mock demo ile akışı gösteriyoruz"
 
-### 6. Güvenlik ve ürünleşme (60 sn) — `/sistem` veya `/demo` güvenlik bölümü
+### 6. Adım 30 — Gerçek API kapısı (45 sn) — `/demo` Adım 30
+
+> "Gerçek forced alignment artık hazır ama bilinçli olarak kilitli — yalnızca komut satırında açık onayla çalışır."
+
+- Web panelden gerçek API **yapılmaz**
+- Demo fixture ile patrona VTT/segment gösterilir
+- Gerçek preview varsa: `elevenlabs-alignment.ps1 -EserId 5 -GercekApiOnayli`
+
+### 7. Güvenlik ve ürünleşme (60 sn) — `/sistem` veya `/demo` güvenlik bölümü
 
 - Localhost only, API anahtarları gizli
 - Metadata KONTROL_GEREKIYOR = güvenlik bilinçli tasarım

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Forced alignment ana servisi — mock varsayılan, gerçek API açık onaylı.
@@ -43,10 +44,17 @@ public final class AlignmentService {
                         AlignmentGuvenlikService.guvenliDosyaAdi(eserId, "alignment.json"),
                         OffsetDateTime.now().toString(), OffsetDateTime.now().toString());
             }
+            AlignmentStorageService.PreviewKontrol kontrol = depo.previewKontrol(eserId);
+            String neden = switch (kontrol) {
+                case METIN_YOK -> "Alignment metni bulunamadı (preview-input.txt).";
+                case MP3_YOK, SIFIR_BOYUT, ESER_YOK ->
+                        "Önce ElevenLabs önizleme üretin (preview MP3 ve preview-input.txt gerekli).";
+                case TAMAM -> "Önizleme hazır.";
+            };
             return new AlignmentPlan(eserId, "preview-elevenlabs", "", "", "", "LOCAL",
-                    AlignmentPlan.STATUS_BLOCKED,
-                    "Önce ElevenLabs önizleme üretin (preview MP3 ve preview-input.txt gerekli).",
-                    0, "preview-elevenlabs.mp3",
+                    kontrol == AlignmentStorageService.PreviewKontrol.TAMAM
+                            ? AlignmentPlan.STATUS_READY : AlignmentPlan.STATUS_BLOCKED,
+                    neden, 0, "preview-elevenlabs.mp3",
                     AlignmentGuvenlikService.guvenliDosyaAdi(eserId, "alignment.json"),
                     OffsetDateTime.now().toString(), OffsetDateTime.now().toString());
         }
@@ -56,11 +64,12 @@ public final class AlignmentService {
         String status = mevcut.status() != null && AlignmentPlan.STATUS_COMPLETED.equalsIgnoreCase(mevcut.status())
                 ? AlignmentPlan.STATUS_COMPLETED
                 : AlignmentPlan.STATUS_READY;
+        String reason = status.equals(AlignmentPlan.STATUS_COMPLETED)
+                ? mevcut.kaynakEtiketi() + " mevcut."
+                : "Mock alignment üretilebilir; gerçek API yalnızca -GercekApiOnayli ile.";
         return new AlignmentPlan(eserId, k.previewId(), k.audioSafeId(), textHash, audioHash,
                 ElevenLabsFabrika.durumOzeti().hazir() ? "ELEVENLABS" : "MOCK",
-                status,
-                status.equals(AlignmentPlan.STATUS_COMPLETED) ? "Alignment mevcut" : "Mock alignment üretilebilir",
-                k.metin().length(),
+                status, reason, k.metin().length(),
                 "preview-elevenlabs.mp3",
                 AlignmentGuvenlikService.guvenliDosyaAdi(eserId, "alignment.json"),
                 OffsetDateTime.now().toString(), OffsetDateTime.now().toString());
@@ -68,10 +77,13 @@ public final class AlignmentService {
 
     public AlignmentSonucu uret(int eserId, boolean mock, boolean gercekApiOnayli) throws Exception {
         AlignmentGuvenlikService.eserIzni(eserId);
+        onizlemeDogrula(eserId, gercekApiOnayli && !mock);
+
         AlignmentStorageService.PreviewKaynaklari k = depo.previewKaynaklari(eserId);
         if (k == null) {
-            throw new IllegalStateException("Önizleme bulunamadı — önce ElevenLabs önizleme üretin.");
+            throw new IllegalStateException(onizlemeHataMesaji(eserId, gercekApiOnayli && !mock));
         }
+
         String textHash = depo.metinHash(k.metin());
         String audioHash = depo.audioHash(k.mp3());
         if (depo.mevcutKullanilabilir(eserId, textHash, audioHash)) {
@@ -79,18 +91,67 @@ public final class AlignmentService {
             return AlignmentSonucu.basarili(mevcut, true, "Mevcut alignment kullanıldı");
         }
 
+        if (gercekApiOnayli && !mock) {
+            if (ElevenLabsFabrika.mockModAktif()) {
+                throw new IllegalStateException(AlignmentHata.mockModAktif().kullaniciMesaji());
+            }
+            if (!TtsLaboratuvarYardimci.ortamVar("ELEVENLABS_API_KEY")) {
+                depo.sonHataKaydet(eserId, AlignmentHata.apiKeyYok());
+                throw new IllegalStateException(AlignmentHata.apiKeyYok().kullaniciMesaji());
+            }
+        }
+
         double sure = AlignmentMockService.tahminiSure(k.mp3(), k.metin());
         AlignmentResult sonuc;
-        if (mock || !gercekApiOnayli) {
-            sonuc = AlignmentMockService.uret(k, textHash, audioHash, sure);
-        } else {
-            sonuc = AlignmentApiClient.uret(k, textHash, audioHash, sure);
+        try {
+            if (mock || !gercekApiOnayli) {
+                sonuc = AlignmentMockService.uret(k, textHash, audioHash, sure);
+            } else {
+                sonuc = AlignmentApiClient.uret(k, textHash, audioHash, sure);
+            }
+        } catch (AlignmentApiException e) {
+            depo.sonHataKaydet(eserId, e.hata());
+            throw new IllegalStateException(e.hata().kullaniciMesaji());
         }
+
+        if (AlignmentPlan.STATUS_FAILED.equalsIgnoreCase(sonuc.status())) {
+            depo.sonHataKaydet(eserId, AlignmentHata.parse());
+            throw new IllegalStateException("Alignment başarısız — yanıt işlenemedi.");
+        }
+
         SubtitleExportService.dogrula(sonuc);
         String srt = SubtitleExportService.srt(sonuc);
         String vtt = SubtitleExportService.vtt(sonuc);
         depo.kaydet(sonuc, srt, vtt);
-        return AlignmentSonucu.basarili(sonuc, false, "Alignment üretildi (" + sonuc.source() + ")");
+        return AlignmentSonucu.basarili(sonuc, false, "Alignment üretildi (" + sonuc.kaynakEtiketi() + ")");
+    }
+
+    private void onizlemeDogrula(int eserId, boolean gercekApi) throws Exception {
+        AlignmentStorageService.PreviewKontrol kontrol = depo.previewKontrol(eserId);
+        if (kontrol == AlignmentStorageService.PreviewKontrol.TAMAM) {
+            return;
+        }
+        String mesaj = onizlemeHataMesaji(eserId, gercekApi);
+        if (gercekApi) {
+            AlignmentHata hata = switch (kontrol) {
+                case METIN_YOK -> AlignmentHata.metinYok();
+                default -> AlignmentHata.onizlemeYok();
+            };
+            depo.sonHataKaydet(eserId, hata);
+        }
+        throw new IllegalStateException(mesaj);
+    }
+
+    private String onizlemeHataMesaji(int eserId, boolean gercekApi) throws Exception {
+        return switch (depo.previewKontrol(eserId)) {
+            case METIN_YOK -> gercekApi
+                    ? AlignmentHata.metinYok().kullaniciMesaji()
+                    : "Önizleme bulunamadı — önce ElevenLabs önizleme üretin.";
+            case MP3_YOK, SIFIR_BOYUT, ESER_YOK -> gercekApi
+                    ? AlignmentHata.onizlemeYok().kullaniciMesaji()
+                    : "Önizleme bulunamadı — önce ElevenLabs önizleme üretin.";
+            case TAMAM -> "";
+        };
     }
 
     public AlignmentSonucu uretDemoFixture(int eserId) throws Exception {
@@ -111,7 +172,7 @@ public final class AlignmentService {
         String srt = SubtitleExportService.srt(sonuc);
         String vtt = SubtitleExportService.vtt(sonuc);
         depo.kaydet(sonuc, srt, vtt);
-        return AlignmentSonucu.basarili(sonuc, false, "Demo fixture alignment üretildi (MOCK)");
+        return AlignmentSonucu.basarili(sonuc, false, "Demo fixture alignment üretildi");
     }
 
     public AlignmentResult sonuc(int eserId) throws Exception {
@@ -132,14 +193,28 @@ public final class AlignmentService {
         AlignmentPlan p = planla(eserId);
         AlignmentResult r = depo.yukle(eserId);
         ObjectNode n = p.json(json);
-        if (r.segmentCount() > 0) {
+        if (r.segmentCount() > 0 || r.eserId() > 0) {
             n.put("segmentCount", r.segmentCount());
             n.put("wordCount", r.wordCount());
             n.put("durationSeconds", r.durationSeconds());
             n.put("srtSafeName", r.srtSafeName());
             n.put("vttSafeName", r.vttSafeName());
             n.put("demoFixture", r.demoFixture());
+            n.put("realApiUsed", r.realApiUsed());
+            n.put("source", r.source());
+            n.put("apiProvider", r.apiProvider());
+            n.put("kaynakEtiketi", r.kaynakEtiketi());
+            if (r.apiRequestId() != null && !r.apiRequestId().isBlank()) {
+                n.put("apiRequestId", r.apiRequestId());
+            }
         }
+        depo.sonHataOku(eserId).ifPresent(h -> {
+            n.put("sonHataKodu", h.hataKodu());
+            n.put("sonHataMesaji", h.kullaniciMesaji());
+        });
+        n.put("gercekApiWebdenKapali", true);
+        n.put("gercekApiKomut",
+                "powershell -ExecutionPolicy Bypass -File .\\elevenlabs-alignment.ps1 -EserId 5 -GercekApiOnayli");
         return AlignmentGuvenlikService.jsonGuvenli(json.writerWithDefaultPrettyPrinter().writeValueAsString(n));
     }
 
@@ -192,8 +267,12 @@ public final class AlignmentService {
             boolean gercekOnizlemeVar,
             boolean altyaziVar,
             boolean demoFixture,
+            boolean gercekApiUsed,
+            String kaynakEtiketi,
             boolean mockButonAktif,
-            String mockButonNeden
+            String mockButonNeden,
+            String sonHataMesaji,
+            String gercekApiKapaliNeden
     ) {
     }
 
@@ -201,7 +280,6 @@ public final class AlignmentService {
         boolean gercekOniz = depo.previewKaynaklari(eserId) != null;
         boolean altyazi = altyaziMevcut(eserId);
         AlignmentResult sonuc = depo.yukle(eserId);
-        boolean demoFixture = sonuc.demoFixture();
         boolean mockAktif = eserId == SesKaliteOlcutleri.KASAGI_ESER_ID
                 && gercekOniz
                 && !AlignmentPlan.STATUS_BLOCKED.equals(plan.status());
@@ -213,7 +291,10 @@ public final class AlignmentService {
                 neden = plan.reason();
             }
         }
-        return new EserAlignmentDurum(gercekOniz, altyazi, demoFixture, mockAktif, neden);
+        String sonHata = depo.sonHataOku(eserId).map(AlignmentHata::kullaniciMesaji).orElse("");
+        String apiKapali = "Gerçek Forced Alignment API yalnızca komut satırında -GercekApiOnayli ile çalıştırılır.";
+        return new EserAlignmentDurum(gercekOniz, altyazi, sonuc.demoFixture(), sonuc.realApiUsed(),
+                sonuc.kaynakEtiketi(), mockAktif, neden, sonHata, apiKapali);
     }
 
     public AlignmentStorageService depo() {

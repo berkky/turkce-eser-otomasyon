@@ -96,6 +96,10 @@ public final class DemoRaporService {
         sb.append("- Telaffuz sözlüğü: yerel JSON + METIN_NORMALIZE\n");
         sb.append("- Tam eser üretimi: KAPALI (web panelinden başlatılamaz)\n");
         sb.append("- Büyük eser (ESER-00006): maliyet onayı şart\n\n");
+        sb.append("## Adım 30 — Gerçek Forced Alignment API Kapısı\n\n");
+        sb.append("- Gerçek API: yalnızca -GercekApiOnayli + preview MP3 + preview-input.txt\n");
+        sb.append("- Web panelden gerçek API çağrısı yapılmaz\n");
+        sb.append("- Mock / DemoFixture davranışı korunur\n\n");
         sb.append("## Adım 29 — Forced Alignment ve Okuma Takibi\n\n");
         sb.append("- Alignment klasörü: ses-arsivi/_alignment/\n");
         sb.append("- Çıktılar: alignment.json, .srt, .vtt, summary.json\n");
