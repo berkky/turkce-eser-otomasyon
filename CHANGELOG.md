@@ -1,5 +1,12 @@
 # Değişiklik Günlüğü
 
+## 33.0.0 — Final teslim paketi ve gönderim hazırlığı
+- `teslim-paketi-olustur.ps1` — kaynak kod ZIP + teslim klasörü.
+- `teslim-paketi-kontrol.ps1` — güvenlik kontrolü, SHA-256, rapor.
+- Gönderim dokümanları: `GONDERIM_MESAJLARI.md`, `PATRON_KISA_OZET.md`, `TEKNIK_KISIYE_NOT.md`, `KURULUM_3_ADIM.md`, `DEMO_5_DAKIKA.md`.
+- `adim33-self-test.ps1`, `Adim33Dogrulama.java`, `FINAL_RELEASE_DOGRULAMA.md`.
+- README Final Demo / teslim paketi bölümü.
+
 ## 32.0.0 — Final release kalite kapısı
 - `final-release-check.ps1` tek komut teslim doğrulaması.
 - `check-secrets.ps1` API anahtarı taraması.

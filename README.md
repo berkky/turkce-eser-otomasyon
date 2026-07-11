@@ -2,6 +2,33 @@
 
 Türkçe kitap ve belgeleri otomatik arşivleyen, kataloglayan ve yapay zekâ ile seslendirmeye hazırlayan yerel üretim sistemidir.
 
+## Final Demo / Hızlı Başlangıç
+
+```powershell
+# 1) Final kalite kapısı
+powershell -ExecutionPolicy Bypass -File .\final-release-check.ps1
+
+# 2) Web paneli
+powershell -ExecutionPolicy Bypass -File .\web-panel.ps1
+```
+
+**Demo URL:** http://127.0.0.1:8787/demo
+
+**Teslim paketi oluşturma (Adım 33):**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\teslim-paketi-olustur.ps1
+powershell -ExecutionPolicy Bypass -File .\teslim-paketi-kontrol.ps1
+```
+
+Çıktı: `Desktop\turkce-eser-final-teslim\` — kaynak kod ZIP + gönderim dokümanları.
+
+**Güvenlik:** API anahtarları repoda/ZIP'te yok. Tam üretim ve gerçek API varsayılan kapalı. Secret scan: `check-secrets.ps1`
+
+**İki paket:** Patron demo paketi (sunum dosyaları) ≠ Final teslim ZIP (kaynak kod + dokümantasyon). Büyük medya/arşiv bilerek dahil edilmez.
+
+---
+
 ## Ne yapar?
 
 - PDF, EPUB ve web kaynaklarından eser alır
@@ -33,10 +60,11 @@ Patron ve teknik olmayan izleyiciler için hazır demo sayfası:
 ## Test komutu
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File .\adim33-self-test.ps1
 powershell -ExecutionPolicy Bypass -File .\final-release-check.ps1
 ```
 
-Başarılı çıktı: `FINAL RELEASE CHECK: BAŞARILI`
+Başarılı çıktı: `ADIM 33 DOĞRULAMA: BAŞARILI` / `FINAL RELEASE CHECK: BAŞARILI`
 
 ## Güvenlik notu
 
@@ -47,7 +75,7 @@ Başarılı çıktı: `FINAL RELEASE CHECK: BAŞARILI`
 
 ## Mevcut durum
 
-**Adım 32** — Final release kalite kapısı tamamlandı. Sistem teslim hazırlığında.
+**Adım 33** — Final teslim paketi ve gönderim hazırlığı tamamlandı.
 
 | Alan | Durum |
 |------|-------|
@@ -57,7 +85,7 @@ Başarılı çıktı: `FINAL RELEASE CHECK: BAŞARILI`
 | Önizleme / alignment | Tamam (mock + onaylı gerçek API) |
 | Üretim planı / kuyruk | Tamam (TTS başlatmaz) |
 | Final kalite kapısı | Tamam |
-| Teslim ZIP | Adım 33 |
+| Teslim ZIP + gönderim | Tamam |
 
 ## GitHub kullanım notu
 
@@ -65,9 +93,10 @@ Repo: https://github.com/berkky/turkce-eser-otomasyon
 
 - Anahtarları ortam değişkeni olarak tanımlayın; repoya commit etmeyin
 - Kredi yokken mock mod ile tüm akış test edilebilir
-- Detaylı kurulum: `FINAL_KURULUM_REHBERI.md`
-- Demo akışı: `FINAL_DEMO_AKISI.md`
+- Detaylı kurulum: `FINAL_KURULUM_REHBERI.md` · 3 adım: `KURULUM_3_ADIM.md`
+- Demo akışı: `FINAL_DEMO_AKISI.md` · 5 dk: `DEMO_5_DAKIKA.md`
+- Gönderim mesajları: `GONDERIM_MESAJLARI.md`
 
 ---
 
-Ayrıntılı mimari: `ADIM_32_MIMARI.md` · Sürüm: **32.0.0**
+Ayrıntılı mimari: `ADIM_32_MIMARI.md` · Sürüm: **33.0.0**

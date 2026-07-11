@@ -6,7 +6,7 @@
 
     <groupId>com.proje</groupId>
     <artifactId>eser-otomasyon</artifactId>
-    <version>32.0.0</version>
+    <version>33.0.0</version>
 
     <properties>
         <maven.compiler.release>21</maven.compiler.release>

@@ -1,6 +1,6 @@
-# Proje Durumu — Adım 32
+# Proje Durumu — Adım 33
 
-## Adım özeti (1–31)
+## Adım özeti (1–32)
 
 | Adım | Konu |
 |------|------|
@@ -11,15 +11,24 @@
 | 28 | Önizleme, telaffuz, maliyet planı |
 | 29–30 | Alignment, gerçek API kapısı |
 | 31 | Tam eser üretim planı / onay / kuyruk |
+| 32 | Final release kalite kapısı |
 
-## Mevcut final durum (Adım 32)
+## Mevcut final durum (Adım 33)
 
-- **Teslim hazırlığı tamam** — yeni özellik eklenmedi
-- `final-release-check.ps1` tek komut kalite kapısı
-- `check-secrets.ps1` secret scan
-- `FINAL_*.md` teslim dokümantasyonu
-- Patron demo paketi final notlar içerir
-- `/demo` Adım 32 kalite paneli
+- **Teslim paketi hazır** — yeni ürün özelliği eklenmedi
+- `teslim-paketi-olustur.ps1` → `Desktop\turkce-eser-final-teslim\`
+- `teslim-paketi-kontrol.ps1` → SHA-256 + güvenlik raporu
+- Gönderim dokümanları: `GONDERIM_MESAJLARI.md`, `PATRON_KISA_OZET.md`, `TEKNIK_KISIYE_NOT.md`
+- `adim33-self-test.ps1` tam doğrulama kapısı
+
+## İki paket ayrımı
+
+| Paket | Konum | İçerik |
+|-------|-------|--------|
+| Patron demo | `Desktop\turkce-eser-demo-paketi\` | Sunum/demonstrasyon |
+| Final teslim | `Desktop\turkce-eser-final-teslim\` | Kaynak kod ZIP + dokümanlar |
+
+Büyük medya ve yerel arşiv dosyaları bilerek ZIP'e konmaz.
 
 ## Demo hazır
 
@@ -29,27 +38,16 @@ powershell -ExecutionPolicy Bypass -File .\web-panel.ps1
 powershell -ExecutionPolicy Bypass -File .\patron-demo-paketi.ps1
 ```
 
-## Gerçek API gerektiren alanlar
-
-- ElevenLabs önizleme (ESER-00005, kısa, onaylı)
-- Forced alignment (`-GercekApiOnayli`)
-- Tam eser TTS: **henüz kapalı** (plan/kuyruk only)
-
-## Kredi yokken davranış
-
-- Mock mod aktif
-- Plan ENGELLI/ORTA risk gösterir
-- Üretim başlamaz
-- Demo fixture ile alignment gösterilebilir
-
 ## Doğrulama
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\adim32-self-test.ps1
+powershell -ExecutionPolicy Bypass -File .\adim33-self-test.ps1
+powershell -ExecutionPolicy Bypass -File .\teslim-paketi-olustur.ps1
+powershell -ExecutionPolicy Bypass -File .\teslim-paketi-kontrol.ps1
 powershell -ExecutionPolicy Bypass -File .\final-release-check.ps1
 powershell -ExecutionPolicy Bypass -File .\check-secrets.ps1
 ```
 
-## Teslim için kalan
+## Teslim durumu
 
-**Adım 33** — ZIP paketi ve gönderim.
+**Adım 33 tamamlandı** — proje dış paylaşıma hazır.

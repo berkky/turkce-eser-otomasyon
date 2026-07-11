@@ -1,0 +1,3 @@
+https://github.com/berkky/turkce-eser-otomasyon
+
+Final kaynak kodu ve dokumantasyon bu repoda tutulmaktadir.
