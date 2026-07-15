@@ -43,7 +43,9 @@ public final class WebSistemDurumService {
                 WebGuvenlikService.envDurumu("OPENAI_API_KEY"),
                 WebGuvenlikService.envDurumu("GEMINI_API_KEY"),
                 WebGuvenlikService.envDurumu("AZURE_SPEECH_KEY"),
-                tesseract
+                tesseract,
+                ortam.pathWarnings().contains(EserVeriYollari.LEGACY_WARNING)
+                        ? EserVeriYollari.LEGACY_WARNING : ""
         );
     }
 
@@ -68,6 +70,7 @@ public final class WebSistemDurumService {
         n.put("geminiApi", d.geminiApi());
         n.put("azureApi", d.azureApi());
         n.put("tesseract", d.tesseract() ? "HAZIR" : "KAPALI");
+        n.put("pathPolicyWarning", d.pathPolicyWarning());
         return WebGuvenlikService.guvenliJson(json.writerWithDefaultPrettyPrinter().writeValueAsString(n));
     }
 
@@ -75,6 +78,7 @@ public final class WebSistemDurumService {
                                String sesArsivi, String kuyruk, String katalog, boolean excelVar,
                                boolean ffmpeg, boolean piper, String elevenLabsApi, String elevenLabsVoice,
                                boolean elevenLabsAbonelikOk, String elevenLabsTts, long elevenLabsKalanKredi,
-                               String openAiApi, String geminiApi, String azureApi, boolean tesseract) {
+                               String openAiApi, String geminiApi, String azureApi, boolean tesseract,
+                               String pathPolicyWarning) {
     }
 }

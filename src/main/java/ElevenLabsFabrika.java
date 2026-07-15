@@ -38,6 +38,18 @@ public final class ElevenLabsFabrika {
         return temiz.equals("true") || temiz.equals("1") || temiz.equals("yes") || temiz.equals("evet");
     }
 
+    public static boolean offlineModAktif() {
+        String deger = System.getenv("ELEVENLABS_OFFLINE");
+        if (deger == null || deger.isBlank()) {
+            deger = System.getProperty("ELEVENLABS_OFFLINE");
+        }
+        if (deger == null || deger.isBlank()) {
+            return false;
+        }
+        String temiz = deger.trim().toLowerCase(Locale.ROOT);
+        return temiz.equals("true") || temiz.equals("1") || temiz.equals("yes") || temiz.equals("evet");
+    }
+
     public static DurumOzeti durumOzeti() {
         boolean mock = mockModAktif();
         boolean apiKeyVar = mock || TtsLaboratuvarYardimci.ortamVar("ELEVENLABS_API_KEY");
@@ -76,6 +88,23 @@ public final class ElevenLabsFabrika {
                     model,
                     mock,
                     "ELEVENLABS_VOICE_ID yok"
+            );
+        }
+
+        if (!mock && offlineModAktif()) {
+            return new DurumOzeti(
+                    false,
+                    "KAPALI",
+                    "TANIMLI",
+                    "TANIMLI",
+                    ElevenLabsClient.voiceIdMaskele(voiceId),
+                    false,
+                    -1L,
+                    -1L,
+                    -1L,
+                    model,
+                    false,
+                    "OFFLINE doğrulama modu — harici API çağrısı yapılmadı"
             );
         }
 

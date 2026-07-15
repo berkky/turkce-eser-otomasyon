@@ -1,22 +1,38 @@
 param(
-    [string]$CiktiKlasoru = "C:\Users\Lenovo\Desktop\turkce-eser-final-teslim"
+    [string]$CiktiKlasoru,
+    [switch]$TestMode,
+    [switch]$SyncRepo
 )
 
 . (Join-Path $PSScriptRoot "konsol-utf8.ps1")
+. (Join-Path $PSScriptRoot "canonical-paths.ps1")
 $ErrorActionPreference = "Stop"
 
 $root = $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($CiktiKlasoru)) {
+    $CiktiKlasoru = Join-Path ([Environment]::GetFolderPath('Desktop')) 'turkce-eser-final-teslim'
+}
+$eserPaths = Get-EserCanonicalPaths
 $zipAdi = "turkce-eser-otomasyon-final.zip"
 $zipYolu = Join-Path $CiktiKlasoru $zipAdi
 
-$excludeDirNames = @('.git', 'target', '.idea', '.vscode', '.cursor', 'node_modules', 'dist', 'build')
-$excludeFilePatterns = @('*.class', '.env', '.env.*', 'credentials.json', 'credentials.*.json')
-$sensitivePathFragments = @(
-    'C:\Users\Lenovo\Desktop\arsiv',
-    'C:\Users\Lenovo\Desktop\metin-arsivi',
-    'C:\Users\Lenovo\Desktop\ses-arsivi',
-    'C:\Users\Lenovo\Desktop\eser-otomasyon-kuyruk'
+$excludeDirNames = @(
+    '.git', 'target', '.idea', '.vscode', '.cursor', 'node_modules', 'dist', 'build',
+    'gelen-eser', 'arsiv', 'metin-arsivi', 'ses-arsivi', 'eser-otomasyon-kuyruk'
 )
+$excludeFilePatterns = @('*.class', '.env', '.env.*', 'credentials.json', 'credentials.*.json', '*.private.json')
+$sensitivePathFragments = @(
+    $eserPaths.Arsiv, $eserPaths.Metin, $eserPaths.Ses, $eserPaths.Kuyruk
+) + @($eserPaths.LegacyPaths)
+
+$normalizedRoot = [System.IO.Path]::GetFullPath($root).TrimEnd('\')
+foreach ($dataRoot in @($eserPaths.CanonicalRoot) + @($eserPaths.LegacyPaths)) {
+    $normalizedData = [System.IO.Path]::GetFullPath($dataRoot).TrimEnd('\')
+    if ($normalizedRoot -eq $normalizedData -or $normalizedRoot.StartsWith($normalizedData + '\',
+            [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Repository klasörü veri kökü olamaz."
+    }
+}
 
 $teslimDokumanlari = @(
     'TESLIM_OZETI.md',
@@ -103,6 +119,15 @@ try {
         Copy-ProjectFile -Source $_.FullName -DestRoot $staging -RelativePath $_.Name
     }
 
+    # Adım 34 ve sonrası docs/ belgeleri; private mapping dosyaları genel dışlama filtresine takılır.
+    $docsRoot = Join-Path $root 'docs'
+    if (Test-Path -LiteralPath $docsRoot) {
+        Get-ChildItem -Path $docsRoot -Recurse -File | ForEach-Object {
+            $rel = $_.FullName.Substring($root.Length + 1)
+            Copy-ProjectFile -Source $_.FullName -DestRoot $staging -RelativePath $rel
+        }
+    }
+
     # ZIP olustur
     if (Test-Path $zipYolu) { Remove-Item $zipYolu -Force }
     Compress-Archive -Path (Join-Path $staging '*') -DestinationPath $zipYolu -CompressionLevel Optimal
@@ -158,10 +183,13 @@ try {
         '2. SHA-256 dosyasini alici ile paylasin',
         '3. `GONDERIM_MESAJLARI.md` icinden uygun mesaji secin',
         '',
-        "ZIP: $zipYolu"
+        "ZIP: $zipAdi"
     ) -join [Environment]::NewLine
     Set-Content -Path (Join-Path $CiktiKlasoru 'TESLIM_OZETI.md') -Value $ozet -Encoding UTF8
-    Copy-Item -Path (Join-Path $CiktiKlasoru 'TESLIM_OZETI.md') -Destination (Join-Path $root 'TESLIM_OZETI.md') -Force
+    if ($SyncRepo -and -not $TestMode) {
+        Copy-Item -Path (Join-Path $CiktiKlasoru 'TESLIM_OZETI.md') `
+            -Destination (Join-Path $root 'TESLIM_OZETI.md') -Force
+    }
 
     Write-Utf8Line ""
     Write-Utf8Line "TESLIM PAKETI OLUSTUR: BASARILI"

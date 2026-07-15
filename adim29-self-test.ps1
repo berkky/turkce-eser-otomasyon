@@ -1,4 +1,5 @@
 . (Join-Path $PSScriptRoot "konsol-utf8.ps1")
+. (Join-Path $PSScriptRoot "canonical-paths.ps1")
 $ErrorActionPreference = "Stop"
 $Maven = if ($env:MAVEN_CMD) { $env:MAVEN_CMD } else { "C:\Tools\apache-maven-3.9.16\bin\mvn.cmd" }
 if (-not (Test-Path $Maven)) { throw "Maven bulunamadi: $Maven" }
@@ -40,7 +41,7 @@ $fixtureScript = Join-Path $PSScriptRoot 'elevenlabs-alignment.ps1'
 & powershell -ExecutionPolicy Bypass -File $fixtureScript -EserId 5 -Mock -DemoFixture
 if ($LASTEXITCODE -ne 0) { throw "DemoFixture script basarisiz (exit $LASTEXITCODE)" }
 
-$alignDir = Join-Path $env:USERPROFILE 'Desktop\ses-arsivi\_alignment'
+$alignDir = Join-Path (Get-EserCanonicalPaths).Ses '_alignment'
 $vttPath = Join-Path $alignDir 'ESER-00005-preview-subtitles.vtt'
 $srtPath = Join-Path $alignDir 'ESER-00005-preview-subtitles.srt'
 $jsonPath = Join-Path $alignDir 'ESER-00005-preview-alignment.json'

@@ -20,7 +20,8 @@ import java.util.stream.Stream;
  * Web paneli için eser listesi ve detay okuma (salt okunur).
  */
 public final class WebEserService {
-    private static final Pattern ESER_KLASOR = Pattern.compile("^ESER-(\\d{5})\\s*-\\s*(.+)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ESER_KLASOR = Pattern.compile(
+            "^ESER-(\\d{5})(?:\\s*-\\s*(.+))?$", Pattern.CASE_INSENSITIVE);
     private static final Pattern PARCA = Pattern.compile("^\\d{3}-\\d{3}\\.txt$");
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -93,7 +94,8 @@ public final class WebEserService {
             return null;
         }
         int id = Integer.parseInt(m.group(1));
-        String ad = m.group(2).trim();
+        String ad = m.group(2) == null || m.group(2).isBlank()
+                ? String.format(Locale.ROOT, "ESER-%05d", id) : m.group(2).trim();
         String yazar = "Bilinmiyor";
         String yayinevi = "Bilinmiyor";
         String isbn = "Bilinmiyor";
@@ -186,7 +188,7 @@ public final class WebEserService {
         boolean onizleme = onizlemeler.stream().anyMatch(o -> o.eserId() == id
                 && !SesKaliteOlcutleri.DURUM_BEKLENIYOR.equals(o.status()));
         return new WebEserOzeti(id, ad, "Bilinmiyor", "Bilinmiyor", "Bilinmiyor",
-                "BILINMIYOR", 0, 0, 0, buyuk ? 237 : 0, buyuk, onizleme, "");
+                "SOURCE_TEXT_NOT_FOUND", 0, 0, 0, 0, buyuk, onizleme, "");
     }
 
     private static Path eserKlasoruBul(Path ana, int eserId) throws Exception {
@@ -221,7 +223,7 @@ public final class WebEserService {
         try (Stream<Path> s = Files.list(tts)) {
             for (Path p : s.filter(Files::isRegularFile).toList()) {
                 if (PARCA.matcher(p.getFileName().toString()).matches()) {
-                    t += Files.size(p);
+                    t += Files.readString(p, StandardCharsets.UTF_8).length();
                 }
             }
         }

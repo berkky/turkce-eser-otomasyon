@@ -49,6 +49,8 @@ $scanPatterns = @(
     @{ Name = 'Google AI key'; Regex = 'AIza[0-9A-Za-z_-]{30,}' },
     @{ Name = 'ELEVENLABS_API_KEY değer'; Regex = 'ELEVENLABS_API_KEY\s*=\s*["'']?(?!dummy|test-key|placeholder|your)[A-Za-z0-9_-]{8,}' },
     @{ Name = 'OPENAI_API_KEY değer'; Regex = 'OPENAI_API_KEY\s*=\s*["'']?(?!dummy|test-key|placeholder|your)[A-Za-z0-9_-]{8,}' },
+    @{ Name = 'XAI_API_KEY değer'; Regex = 'XAI_API_KEY\s*=\s*["'']?(?!dummy|test-key|placeholder|your)[A-Za-z0-9_-]{8,}' },
+    @{ Name = 'CARTESIA_API_KEY değer'; Regex = 'CARTESIA_API_KEY\s*=\s*["'']?(?!dummy|test-key|placeholder|your)[A-Za-z0-9_-]{8,}' },
     @{ Name = 'GEMINI_API_KEY değer'; Regex = 'GEMINI_API_KEY\s*=\s*["'']?(?!dummy|test-key|placeholder|your)[A-Za-z0-9_-]{8,}' },
     @{ Name = 'AZURE_SPEECH_KEY değer'; Regex = 'AZURE_SPEECH_KEY\s*=\s*["'']?(?!dummy|test-key|placeholder|your)[A-Za-z0-9_-]{8,}' }
 )

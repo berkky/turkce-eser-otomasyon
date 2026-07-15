@@ -28,6 +28,7 @@ public final class YerelWebSunucu {
     private final DemoAkisService demoAkis;
     private final DemoMetrikService demoMetrik;
     private final DemoRaporService demoRapor;
+    private final TtsAbWebService abTest;
     private final ObjectMapper json = new ObjectMapper();
     private HttpServer sunucu;
     private ExecutorService executor;
@@ -39,6 +40,7 @@ public final class YerelWebSunucu {
         this.demoAkis = new DemoAkisService(ortam);
         this.demoMetrik = new DemoMetrikService(ortam);
         this.demoRapor = new DemoRaporService(ortam);
+        this.abTest = new TtsAbWebService(ortam);
         islemService.klasorleriHazirla();
         kalitePanel.yenile();
     }
@@ -149,6 +151,9 @@ public final class YerelWebSunucu {
         }
         if (path.equals("/api/demo/akis") && "GET".equals(method)) {
             return WebResponse.jsonOk(demoAkis.akisJson());
+        }
+        if (path.equals("/ab-test") || path.startsWith("/ab-test/")) {
+            return abTest.route(method, path, body);
         }
         if ("POST".equals(method) && path.equals("/islemler")) {
             return postIslem(body);

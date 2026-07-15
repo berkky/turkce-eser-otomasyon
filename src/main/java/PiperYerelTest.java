@@ -18,9 +18,9 @@ public class PiperYerelTest {
         Utf8Konsol.etkinlestir();
         try {
             Path projeKlasoru = Path.of(System.getProperty("user.dir"));
-            Path masaustu = Path.of(System.getProperty("user.home"), "Desktop");
-            Path metinArsivi = masaustu.resolve("metin-arsivi");
-            Path sesArsivi = masaustu.resolve("ses-arsivi");
+            EserVeriYollari yollar = EserVeriYollari.varsayilan();
+            Path metinArsivi = yollar.metin();
+            Path sesArsivi = yollar.ses();
 
             PiperClient piper = new PiperClient(projeKlasoru);
             FfmpegClient ffmpeg = new FfmpegClient(projeKlasoru);

@@ -10,14 +10,18 @@ public class App {
     public static void main(String[] args) {
         Utf8Konsol.etkinlestir();
         Path projeKlasoru = Path.of(System.getProperty("user.dir"));
-        Path masaustu = Path.of(System.getProperty("user.home"), "Desktop");
-        Path gelenKlasoru = masaustu.resolve("gelen-pdf");
-        Path arsivKlasoru = masaustu.resolve("arsiv");
-        Path tekrarKlasoru = masaustu.resolve("tekrarlar");
-        Path metinArsivKlasoru = masaustu.resolve("metin-arsivi");
-        Path sesArsivKlasoru = masaustu.resolve("ses-arsivi");
-        Path eskiExcelYolu = masaustu.resolve("kitap-arsivi.xlsx");
-        Path excelYolu = masaustu.resolve("eser-arsivi.xlsx");
+        EserVeriYollari yollar = EserVeriYollari.varsayilan();
+        if (yollar.legacyDetected()) {
+            System.err.println(EserVeriYollari.LEGACY_WARNING
+                    + " — canonical Desktop\\ESER kullanılacak; otomatik migration yapılmayacak.");
+        }
+        Path gelenKlasoru = yollar.gelen();
+        Path arsivKlasoru = yollar.arsiv();
+        Path tekrarKlasoru = yollar.canonicalRoot().resolve("tekrarlar");
+        Path metinArsivKlasoru = yollar.metin();
+        Path sesArsivKlasoru = yollar.ses();
+        Path eskiExcelYolu = yollar.canonicalRoot().resolve("kitap-arsivi.xlsx");
+        Path excelYolu = yollar.katalog();
 
         try {
             DosyaArsivService.klasorHazirla(gelenKlasoru);

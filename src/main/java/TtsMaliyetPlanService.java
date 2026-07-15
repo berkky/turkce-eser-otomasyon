@@ -20,6 +20,21 @@ public final class TtsMaliyetPlanService {
                     false, true, "ESER_BULUNAMADI", "Eser bulunamadı");
         }
         WebEserService.WebEserOzeti o = detay.ozet();
+        if (o.karakter() <= 0) {
+            String code = "SOURCE_CHARACTER_COUNT_INVALID";
+            if (o.buyukEser()) code += "_BUYUK_ESER";
+            return new TtsMaliyetPlani(eserId, o.karakter(), o.ttsParca(),
+                    ONIZLEME_HEdef_KARAKTER, 0, 0,
+                    o.buyukEser(), true, code,
+                    "Kaynak metin karakter sayısı doğrulanamadı; üretim planı engellendi.");
+        }
+        if (o.ttsParca() <= 0) {
+            return new TtsMaliyetPlani(eserId, o.karakter(), 0,
+                    ONIZLEME_HEdef_KARAKTER, 0, 0,
+                    o.buyukEser(), true, o.buyukEser()
+                    ? "SOURCE_TEXT_NOT_FOUND_BUYUK_ESER" : "SOURCE_TEXT_NOT_FOUND",
+                    "TTS parça kaynağı bulunamadı; üretim planı engellendi.");
+        }
         String modelId = ElevenLabsModelPolitikasi.ortamModeliVeyaVarsayilan();
         long tamMaliyet = tahminiKredi(o.karakter(), modelId);
         long onizMaliyet = tahminiKredi(ONIZLEME_HEdef_KARAKTER, modelId);
@@ -75,6 +90,9 @@ public final class TtsMaliyetPlanService {
     }
 
     private static long tahminiKredi(int karakter, String modelId) {
+        if (karakter <= 0) {
+            return 0L;
+        }
         double carpan = ElevenLabsClient.bilinenModelKrediCarpani(modelId);
         return Math.max(1L, (long) Math.ceil(karakter * carpan));
     }

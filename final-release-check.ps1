@@ -8,6 +8,14 @@ $ErrorActionPreference = "Stop"
 $Maven = if ($env:MAVEN_CMD) { $env:MAVEN_CMD } else { "C:\Tools\apache-maven-3.9.16\bin\mvn.cmd" }
 if (-not (Test-Path $Maven)) { throw "Maven bulunamadi: $Maven" }
 
+$env:ELEVENLABS_OFFLINE = 'true'
+$env:ELEVENLABS_LIVE_ENABLED = 'false'
+$env:XAI_TTS_LIVE_ENABLED = 'false'
+$env:OPENAI_TTS_LIVE_ENABLED = 'false'
+$env:GOOGLE_TTS_LIVE_ENABLED = 'false'
+$env:AZURE_TTS_LIVE_ENABLED = 'false'
+$env:CARTESIA_TTS_LIVE_ENABLED = 'false'
+
 $reportDir = Join-Path ([Environment]::GetFolderPath('Desktop')) 'turkce-eser-final-release'
 $warnings = [System.Collections.Generic.List[string]]::new()
 $failedStep = $null
@@ -29,6 +37,46 @@ function Invoke-Step {
         $script:failedStep = $Name
         Write-Utf8Line "HATA: $Name - $($_.Exception.Message)"
     }
+}
+
+function Invoke-ElevenLabsMock {
+    param([scriptblock]$Action)
+    $onceki = $env:ELEVENLABS_MOCK
+    try {
+        $env:ELEVENLABS_MOCK = 'true'
+        & $Action
+        $kod = $LASTEXITCODE
+        if ($null -ne $kod -and $kod -ne 0) {
+            throw "Exit code $kod"
+        }
+    } finally {
+        if ($null -eq $onceki) {
+            Remove-Item Env:ELEVENLABS_MOCK -ErrorAction SilentlyContinue
+        } else {
+            $env:ELEVENLABS_MOCK = $onceki
+        }
+    }
+    $global:LASTEXITCODE = 0
+}
+
+function Invoke-ElevenLabsOffline {
+    param([scriptblock]$Action)
+    $onceki = $env:ELEVENLABS_OFFLINE
+    try {
+        $env:ELEVENLABS_OFFLINE = 'true'
+        & $Action
+        $kod = $LASTEXITCODE
+        if ($null -ne $kod -and $kod -ne 0) {
+            throw "Exit code $kod"
+        }
+    } finally {
+        if ($null -eq $onceki) {
+            Remove-Item Env:ELEVENLABS_OFFLINE -ErrorAction SilentlyContinue
+        } else {
+            $env:ELEVENLABS_OFFLINE = $onceki
+        }
+    }
+    $global:LASTEXITCODE = 0
 }
 
 function Get-GitHash {
@@ -135,17 +183,23 @@ if (-not $failedStep) { $buildOk = $true }
 
 if (-not $TestMode) {
     Invoke-Step 'finalRegression' {
-        & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'adim31-self-test.ps1')
+        Invoke-ElevenLabsOffline {
+            & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'adim31-self-test.ps1')
+        }
     }
     if (-not $failedStep) { $regressionOk = $true }
 
     Invoke-Step 'finalDemoPaketi' {
-        & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'patron-demo-paketi.ps1')
+        Invoke-ElevenLabsOffline {
+            & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'patron-demo-paketi.ps1')
+        }
     }
     if (-not $failedStep) { $demoOk = $true }
 
     Invoke-Step 'finalElevenLabsDurum' {
-        & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'elevenlabs-durum.ps1')
+        Invoke-ElevenLabsOffline {
+            & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'elevenlabs-durum.ps1')
+        }
     }
 
     Invoke-Step 'finalAlignmentFixture' {
@@ -153,19 +207,27 @@ if (-not $TestMode) {
     }
 
     Invoke-Step 'finalTamEserPlan5' {
-        & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'tam-eser-plan.ps1') -EserId 5
+        Invoke-ElevenLabsMock {
+            & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'tam-eser-plan.ps1') -EserId 5
+        }
     }
 
     Invoke-Step 'finalTamEserPlan6' {
-        & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'tam-eser-plan.ps1') -EserId 6
+        Invoke-ElevenLabsMock {
+            & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'tam-eser-plan.ps1') -EserId 6
+        }
     }
 
     Invoke-Step 'finalTamEserOnay' {
-        & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'tam-eser-onay-taslagi.ps1') -EserId 5
+        Invoke-ElevenLabsMock {
+            & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'tam-eser-onay-taslagi.ps1') -EserId 5
+        }
     }
 
     Invoke-Step 'finalTamEserKuyruk' {
-        & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'tam-eser-kuyruga-al.ps1') -EserId 5 -Onayli
+        Invoke-ElevenLabsMock {
+            & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'tam-eser-kuyruga-al.ps1') -EserId 5 -Onayli
+        }
     }
 } else {
     $regressionOk = $true

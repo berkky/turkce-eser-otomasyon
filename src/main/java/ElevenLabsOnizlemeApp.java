@@ -26,10 +26,10 @@ public final class ElevenLabsOnizlemeApp {
             }
         }
 
-        Path masaustu = Path.of(System.getProperty("user.home"), "Desktop");
-        Path metinArsivi = ortamYolu("ESER_METIN_ARSIVI", masaustu.resolve("metin-arsivi"));
-        Path sesArsivi = ortamYolu("ESER_SES_ARSIVI", masaustu.resolve("ses-arsivi"));
-        Path kalitePanel = ortamYolu("SES_KALITE_PANEL", masaustu.resolve("ses-arsivi_kalite-panel"));
+        EserVeriYollari yollar = EserVeriYollari.varsayilan();
+        Path metinArsivi = yollar.metin();
+        Path sesArsivi = yollar.ses();
+        Path kalitePanel = yollar.kalitePanel();
 
         System.out.println("--- ELEVENLABS ÖNİZLEME ---");
         System.out.println("Eser ID: ESER-" + String.format("%05d", eserId));
@@ -54,10 +54,5 @@ public final class ElevenLabsOnizlemeApp {
 
         System.err.println("Önizleme tamamlanamadı: " + sonuc.mesaj());
         System.exit(1);
-    }
-
-    private static Path ortamYolu(String ad, Path varsayilan) {
-        String deger = System.getenv(ad);
-        return deger == null || deger.isBlank() ? varsayilan : Path.of(deger.trim());
     }
 }

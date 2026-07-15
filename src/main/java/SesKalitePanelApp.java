@@ -7,11 +7,10 @@ public final class SesKalitePanelApp {
     public static void main(String[] args) throws Exception {
         Utf8Konsol.etkinlestir();
         Path proje = Path.of(System.getProperty("user.dir"));
-        Path masaustu = Path.of(System.getProperty("user.home"), "Desktop");
-
-        Path sesArsivi = ortamYolu("ESER_SES_ARSIVI", masaustu.resolve("ses-arsivi"));
-        Path metinArsivi = ortamYolu("ESER_METIN_ARSIVI", masaustu.resolve("metin-arsivi"));
-        Path panelKlasoru = ortamYolu("SES_KALITE_PANEL", masaustu.resolve("ses-arsivi_kalite-panel"));
+        EserVeriYollari yollar = EserVeriYollari.varsayilan();
+        Path sesArsivi = yollar.ses();
+        Path metinArsivi = yollar.metin();
+        Path panelKlasoru = yollar.kalitePanel();
 
         System.out.println("========================================");
         System.out.println("SES KALİTE PANELİ ÜRETİMİ");
@@ -35,10 +34,5 @@ public final class SesKalitePanelApp {
         System.out.println("Önizleme sayısı: " + sonuc.rapor().onizlemeler().size());
         System.out.println();
         System.out.println("Tarayıcıda açın: " + sonuc.html().toUri());
-    }
-
-    private static Path ortamYolu(String ad, Path varsayilan) {
-        String deger = System.getenv(ad);
-        return deger == null || deger.isBlank() ? varsayilan : Path.of(deger.trim());
     }
 }

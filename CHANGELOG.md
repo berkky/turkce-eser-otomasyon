@@ -1,5 +1,15 @@
 # Değişiklik Günlüğü
 
+## 34.0.0 — Türkçe TTS A/B ses laboratuvarı
+- ESER-00005 için sabit kaynak hash, deney/aday/manifest modelleri ve mock-varsayılan orkestrasyon.
+- xAI unary TTS adaptörü; live/CLI/eser/karakter/bütçe/idempotency kapıları ve yerel fake HTTP testleri.
+- FFmpeg iki geçişli -16 LUFS / -1 dBTP normalizasyonu, metadata temizliği ve deterministic kör mapping.
+- `/ab-test` localhost değerlendirme ekranı, UTF-8 BOM CSV ve submission ID tekrar koruması.
+- Public paket allowlist'i; `provider-mapping.private.json` dışlama güvencesi.
+- `adim34-self-test.ps1` ve Adım 34 güvenlik/metodoloji dokümantasyonu.
+- Java/PowerShell için tek `%USERPROFILE%\Desktop\ESER` canonical veri kökü; legacy kökler salt
+  tespit edilir ve aktif cache/yazma hedefi olmaz.
+
 ## 33.0.0 — Final teslim paketi ve gönderim hazırlığı
 - `teslim-paketi-olustur.ps1` — kaynak kod ZIP + teslim klasörü.
 - `teslim-paketi-kontrol.ps1` — güvenlik kontrolü, SHA-256, rapor.

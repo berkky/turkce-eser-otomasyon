@@ -42,8 +42,7 @@ public final class ElevenLabsAlignmentApp {
             System.clearProperty("ELEVENLABS_MOCK");
         }
 
-        Path masaustu = Path.of(System.getProperty("user.home"), "Desktop");
-        Path sesArsivi = ortamYolu("ESER_SES_ARSIVI", masaustu.resolve("ses-arsivi"));
+        Path sesArsivi = EserVeriYollari.varsayilan().ses();
 
         System.out.println("--- ELEVENLABS FORCED ALIGNMENT (Adım 30) ---");
         System.out.println("Eser ID: ESER-" + String.format("%05d", eserId));
@@ -86,11 +85,4 @@ public final class ElevenLabsAlignmentApp {
         }
     }
 
-    private static Path ortamYolu(String ad, Path varsayilan) {
-        String deger = System.getenv(ad);
-        if (deger == null || deger.isBlank()) {
-            deger = System.getProperty(ad);
-        }
-        return deger == null || deger.isBlank() ? varsayilan : Path.of(deger.trim());
-    }
 }

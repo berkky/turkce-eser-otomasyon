@@ -12,10 +12,14 @@ public final class UretimOrkestratoruApp {
     public static void main(String[] args) throws Exception {
         Utf8Konsol.etkinlestir();
         Path proje = Path.of(System.getProperty("user.dir"));
-        Path masaustu = Path.of(System.getProperty("user.home"), "Desktop");
-        Path metin = ortamYol("ESER_METIN_ARSIVI", masaustu.resolve("metin-arsivi"));
-        Path ses = ortamYol("ESER_SES_ARSIVI", masaustu.resolve("ses-arsivi"));
-        Path kuyrukYolu = ortamYol("ESER_URETIM_KUYRUGU", masaustu.resolve("eser-otomasyon-kuyruk"));
+        EserVeriYollari yollar = EserVeriYollari.varsayilan();
+        if (yollar.legacyDetected()) {
+            System.err.println(EserVeriYollari.LEGACY_WARNING
+                    + " — canonical Desktop\\ESER kullanılacak; otomatik migration yapılmayacak.");
+        }
+        Path metin = yollar.metin();
+        Path ses = yollar.ses();
+        Path kuyrukYolu = yollar.kuyruk();
         Files.createDirectories(metin); Files.createDirectories(ses); Files.createDirectories(kuyrukYolu);
 
         UretimKuyruguService kuyruk = new UretimKuyruguService(kuyrukYolu, ses);
@@ -23,7 +27,7 @@ public final class UretimOrkestratoruApp {
         UretimPaketlemeService paket = new UretimPaketlemeService(proje, kuyruk);
 
         if (args.length > 0) {
-            komutCalistir(args, metin, kuyruk, ork, paket);
+            komutCalistir(args, metin, ses, kuyrukYolu, kuyruk, ork, paket);
             return;
         }
 
@@ -61,15 +65,14 @@ public final class UretimOrkestratoruApp {
         }
     }
 
-    private static void komutCalistir(String[] args, Path metin, UretimKuyruguService kuyruk,
+    private static void komutCalistir(String[] args, Path metin, Path ses, Path kuyrukYolu,
+                                     UretimKuyruguService kuyruk,
                                      UretimOrkestratoruService ork, UretimPaketlemeService paket) throws Exception {
         String komut = args[0].toLowerCase(Locale.ROOT);
         switch (komut) {
             case "sync", "reconcile" -> senkronizasyonYaz(kuyruk.senkronizeEt(metin));
             case "status" -> durumYaz(kuyruk.listele());
-            case "doctor" -> doktor(Path.of(System.getProperty("user.dir")), metin,
-                    ortamYol("ESER_SES_ARSIVI", Path.of(System.getProperty("user.home"), "Desktop", "ses-arsivi")),
-                    ortamYol("ESER_URETIM_KUYRUGU", Path.of(System.getProperty("user.home"), "Desktop", "eser-otomasyon-kuyruk")));
+            case "doctor" -> doktor(Path.of(System.getProperty("user.dir")), metin, ses, kuyrukYolu);
             case "plan" -> planYaz(ork.planla(gerekliIs(args, kuyruk)));
             case "run" -> sonucYaz(ork.calistir(gerekliIs(args, kuyruk), contains(args, "--override-limit")));
             case "run-next" -> {
@@ -205,7 +208,6 @@ public final class UretimOrkestratoruApp {
         System.out.println("FFmpeg: " + (f.hazir() ? "HAZIR" : "KAPALI") + " | " + f.mesaj());
     }
 
-    private static Path ortamYol(String ad, Path varsayilan) { String v = System.getenv(ad); return v == null || v.isBlank() ? varsayilan : Path.of(v.trim()); }
     private static String ortam(String ad, String varsayilan) { String v = System.getenv(ad); return v == null || v.isBlank() ? varsayilan : v.trim(); }
     private static boolean contains(String[] a, String x) { for (String s : a) if (x.equalsIgnoreCase(s)) return true; return false; }
 }

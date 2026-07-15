@@ -28,7 +28,7 @@ public final class PiperClient {
                 pythonYolunuBul(projeKlasoru),
                 ortamVeyaVarsayilanYol(
                         "PIPER_DATA_DIR",
-                        Path.of(System.getProperty("user.home"), "Desktop", "piper-voices")
+                        EserVeriYollari.varsayilan().canonicalRoot().resolve("piper-voices")
                 ),
                 ortamVeyaVarsayilan("PIPER_VOICE", "tr_TR-dfki-medium"),
                 ortamBoolean("PIPER_USE_CUDA", false)

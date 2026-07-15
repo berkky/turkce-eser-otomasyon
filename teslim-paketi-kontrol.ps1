@@ -1,9 +1,14 @@
 param(
-    [string]$TeslimKlasoru = "C:\Users\Lenovo\Desktop\turkce-eser-final-teslim"
+    [string]$TeslimKlasoru
 )
 
 . (Join-Path $PSScriptRoot "konsol-utf8.ps1")
+. (Join-Path $PSScriptRoot "canonical-paths.ps1")
 $ErrorActionPreference = "Stop"
+if ([string]::IsNullOrWhiteSpace($TeslimKlasoru)) {
+    $TeslimKlasoru = Join-Path ([Environment]::GetFolderPath('Desktop')) 'turkce-eser-final-teslim'
+}
+$eserPaths = Get-EserCanonicalPaths
 
 $zipAdi = "turkce-eser-otomasyon-final.zip"
 $zipYolu = Join-Path $TeslimKlasoru $zipAdi
@@ -63,6 +68,12 @@ if (Test-ZipContains '.git/*' -or Test-ZipContains '*/.git/*') {
     Add-Bulgu 'ZIP icinde .git klasoru var'
 } else {
     Write-Utf8Line 'OK: .git yok'
+}
+
+foreach ($dataName in @('gelen-eser', 'arsiv', 'metin-arsivi', 'ses-arsivi', 'eser-otomasyon-kuyruk')) {
+    if (Test-ZipContains "$dataName/*" -or Test-ZipContains "*/$dataName/*") {
+        Add-Bulgu "ZIP icinde veri klasoru var: $dataName"
+    }
 }
 
 # target yok
@@ -139,9 +150,13 @@ if (Test-Path $zipYolu) {
                         $secretHit = $true
                     }
                 }
-                if ($line -match 'C:\\Users\\Lenovo\\Desktop\\(arsiv|metin-arsivi|ses-arsivi|eser-otomasyon-kuyruk)') {
-                    $rel = $f.FullName.Substring($tempExtract.Length + 1)
-                    Add-Uyari "Yerel path sizintisi: $rel satir $lineNum"
+                foreach ($dataPath in @($eserPaths.Arsiv, $eserPaths.Metin, $eserPaths.Ses,
+                        $eserPaths.Kuyruk) + @($eserPaths.LegacyPaths)) {
+                    if ($line -match [regex]::Escape($dataPath)) {
+                        $rel = $f.FullName.Substring($tempExtract.Length + 1)
+                        Add-Uyari "Yerel path sizintisi: $rel satir $lineNum"
+                        break
+                    }
                 }
             }
         }
@@ -158,7 +173,7 @@ if (Test-Path $zipYolu) {
     $sha256 = $hash.Hash
     $shaMetin = @(
         "Dosya: $zipAdi",
-        "Yol: $zipYolu",
+        "Yol: $zipAdi",
         "SHA-256: $sha256",
         "Tarih: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')",
         "Boyut: $((Get-Item $zipYolu).Length) byte"

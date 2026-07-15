@@ -53,10 +53,7 @@ public final class EserKaynakAlimService {
         this.metinArsivi = metinArsivi;
         this.sesArsivi = sesArsivi;
         this.kuyruk = kuyruk;
-        String env = System.getenv("ESER_KATALOGU");
-        this.katalogYolu = env == null || env.isBlank()
-                ? Path.of(System.getProperty("user.home"), "Desktop", "eser-katalogu.xlsx")
-                : Path.of(env.trim());
+        this.katalogYolu = EserVeriYollari.varsayilan().katalog();
         this.katalog = new EserKatalogService(katalogYolu);
     }
 

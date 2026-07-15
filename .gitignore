@@ -17,6 +17,7 @@ application_default_credentials.json
 credentials.json
 secrets.json
 token.json
+provider-mapping.private.json
 
 dist/
 build/

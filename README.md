@@ -19,6 +19,8 @@ powershell -ExecutionPolicy Bypass -File .\web-panel.ps1
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\teslim-paketi-olustur.ps1
 powershell -ExecutionPolicy Bypass -File .\teslim-paketi-kontrol.ps1
+# Yalnız bilinçli release güncellemesinde tracked TESLIM_OZETI.md senkronu:
+# powershell -ExecutionPolicy Bypass -File .\teslim-paketi-olustur.ps1 -SyncRepo
 ```
 
 Çıktı: `Desktop\turkce-eser-final-teslim\` — kaynak kod ZIP + gönderim dokümanları.
@@ -26,6 +28,11 @@ powershell -ExecutionPolicy Bypass -File .\teslim-paketi-kontrol.ps1
 **Güvenlik:** API anahtarları repoda/ZIP'te yok. Tam üretim ve gerçek API varsayılan kapalı. Secret scan: `check-secrets.ps1`
 
 **İki paket:** Patron demo paketi (sunum dosyaları) ≠ Final teslim ZIP (kaynak kod + dokümantasyon). Büyük medya/arşiv bilerek dahil edilmez.
+
+**Canonical veri kökü:** `%USERPROFILE%\Desktop\ESER`. Java uygulamaları `EserVeriYollari`,
+PowerShell scriptleri `canonical-paths.ps1` üzerinden aynı politikayı kullanır. Legacy doğrudan
+Desktop veri klasörleri otomatik seçilmez, yazılmaz veya taşınmaz; yalnız
+`LEGACY_DATA_ROOT_DETECTED` uyarısıyla raporlanır.
 
 ---
 
@@ -60,11 +67,26 @@ Patron ve teknik olmayan izleyiciler için hazır demo sayfası:
 ## Test komutu
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File .\adim34-self-test.ps1
 powershell -ExecutionPolicy Bypass -File .\adim33-self-test.ps1
 powershell -ExecutionPolicy Bypass -File .\final-release-check.ps1
 ```
 
-Başarılı çıktı: `ADIM 33 DOĞRULAMA: BAŞARILI` / `FINAL RELEASE CHECK: BAŞARILI`
+Başarılı çıktı: `ADIM 34 DOGRULAMA: BASARILI` / `FINAL RELEASE CHECK: BAŞARILI`
+
+## Türkçe TTS A/B laboratuvarı
+
+```powershell
+# Yapılandırma durumu; API çağrısı yok
+powershell -ExecutionPolicy Bypass -File .\tts-ab-lab.ps1 -Status
+
+# FFmpeg ile tamamen yerel mock kör paket
+powershell -ExecutionPolicy Bypass -File .\tts-ab-lab.ps1 -Mock -Seed 340034
+```
+
+Kör değerlendirme: `http://127.0.0.1:8787/ab-test`. xAI canlı modu varsayılan kapalıdır,
+yalnız ESER-00005 için tek seçilmiş voice, ortam kapısı ve iki açık CLI onayıyla çalışır.
+Detaylar: `docs/AB_TEST_UYGULAMA_REHBERI.md`.
 
 ## Güvenlik notu
 
@@ -75,7 +97,7 @@ Başarılı çıktı: `ADIM 33 DOĞRULAMA: BAŞARILI` / `FINAL RELEASE CHECK: BA
 
 ## Mevcut durum
 
-**Adım 33** — Final teslim paketi ve gönderim hazırlığı tamamlandı.
+**Adım 34** — Türkçe TTS A/B laboratuvarı, xAI adaptörü ve kör değerlendirme paketi eklendi.
 
 | Alan | Durum |
 |------|-------|

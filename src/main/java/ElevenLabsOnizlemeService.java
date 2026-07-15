@@ -63,7 +63,7 @@ public final class ElevenLabsOnizlemeService {
             }
 
             Path kalitePanel = kalitePanelKlasoru != null ? kalitePanelKlasoru
-                    : Path.of(System.getProperty("user.home"), "Desktop", "ses-arsivi_kalite-panel");
+                    : EserVeriYollari.varsayilan().kalitePanel();
             String panelEnv = System.getenv("SES_KALITE_PANEL");
             if (panelEnv != null && !panelEnv.isBlank()) {
                 kalitePanel = Path.of(panelEnv.trim());

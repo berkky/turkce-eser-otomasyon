@@ -8,14 +8,14 @@ public final class KaynakAlimOrkestratoruApp {
     public static void main(String[] args) throws Exception {
         Utf8Konsol.etkinlestir();
         Path proje = Path.of(System.getProperty("user.dir"));
-        Path masaustu = Path.of(System.getProperty("user.home"), "Desktop");
+        EserVeriYollari yollar = EserVeriYollari.varsayilan();
+        if (yollar.legacyDetected()) {
+            System.err.println(EserVeriYollari.LEGACY_WARNING
+                    + " — canonical Desktop\\ESER kullanılacak; otomatik migration yapılmayacak.");
+        }
         EserKaynakAlimService servis = new EserKaynakAlimService(
                 proje,
-                ortamYol("ESER_GELEN_KLASORU", masaustu.resolve("gelen-eser")),
-                ortamYol("ESER_ARSIVI", masaustu.resolve("arsiv")),
-                ortamYol("ESER_METIN_ARSIVI", masaustu.resolve("metin-arsivi")),
-                ortamYol("ESER_SES_ARSIVI", masaustu.resolve("ses-arsivi")),
-                ortamYol("ESER_URETIM_KUYRUGU", masaustu.resolve("eser-otomasyon-kuyruk"))
+                yollar.gelen(), yollar.arsiv(), yollar.metin(), yollar.ses(), yollar.kuyruk()
         );
         if (args.length > 0) { komut(args, servis); return; }
 
@@ -167,7 +167,6 @@ public final class KaynakAlimOrkestratoruApp {
     }
 
     private static String boyut(long b){return b<0?"?":String.format(Locale.ROOT,"%.1f MB",b/1024.0/1024.0);}
-    private static Path ortamYol(String a,Path v){String x=System.getenv(a);return x==null||x.isBlank()?v:Path.of(x.trim());}
     private static boolean ortamVar(String a){String x=System.getenv(a);return x!=null&&!x.isBlank();}
     private static String tirnakSil(String s){String x=s.trim();return x.length()>1&&x.startsWith("\"")&&x.endsWith("\"")?x.substring(1,x.length()-1):x;}
     private static void gerekli(String[] a,int n,String m){if(a.length<n)throw new IllegalArgumentException(m);}

@@ -1,4 +1,4 @@
-# Proje Durumu — Adım 33
+# Proje Durumu — Adım 34
 
 ## Adım özeti (1–32)
 
@@ -12,14 +12,17 @@
 | 29–30 | Alignment, gerçek API kapısı |
 | 31 | Tam eser üretim planı / onay / kuyruk |
 | 32 | Final release kalite kapısı |
+| 33 | Final teslim paketi ve gönderim hazırlığı |
+| 34 | Türkçe TTS A/B laboratuvarı, xAI ve kör değerlendirme |
 
-## Mevcut final durum (Adım 33)
+## Mevcut durum (Adım 34)
 
-- **Teslim paketi hazır** — yeni ürün özelliği eklenmedi
-- `teslim-paketi-olustur.ps1` → `Desktop\turkce-eser-final-teslim\`
-- `teslim-paketi-kontrol.ps1` → SHA-256 + güvenlik raporu
-- Gönderim dokümanları: `GONDERIM_MESAJLARI.md`, `PATRON_KISA_OZET.md`, `TEKNIK_KISIYE_NOT.md`
-- `adim33-self-test.ps1` tam doğrulama kapısı
+- ESER-00005 için 900–1.200 karakterlik sabit kaynak hash ve mock-varsayılan deney akışı
+- xAI unary TTS adaptörü; live/CLI/eser/karakter/bütçe/idempotency kapıları
+- FFmpeg ortak normalizasyonu ve deterministic `ornek-A/B` kör paket
+- Localhost `/ab-test` değerlendirmesi, UTF-8 CSV ve submission ID koruması
+- Adım 21–33 regresyonu ve secret scan, `adim34-self-test.ps1` içinde başarıyla doğrulandı
+- Tam kitap, ESER-00006 canlı TTS, WebSocket ve voice cloning kapsam dışıdır
 
 ## İki paket ayrımı
 
@@ -42,6 +45,8 @@ powershell -ExecutionPolicy Bypass -File .\patron-demo-paketi.ps1
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\adim33-self-test.ps1
+powershell -ExecutionPolicy Bypass -File .\adim34-self-test.ps1
+powershell -ExecutionPolicy Bypass -File .\tts-ab-lab.ps1 -Mock -Seed 340034
 powershell -ExecutionPolicy Bypass -File .\teslim-paketi-olustur.ps1
 powershell -ExecutionPolicy Bypass -File .\teslim-paketi-kontrol.ps1
 powershell -ExecutionPolicy Bypass -File .\final-release-check.ps1
@@ -50,4 +55,4 @@ powershell -ExecutionPolicy Bypass -File .\check-secrets.ps1
 
 ## Teslim durumu
 
-**Adım 33 tamamlandı** — proje dış paylaşıma hazır.
+**Adım 34 tamamlandı** — mock A/B paketi ve güvenli canlı xAI kapısı hazır; canlı kalite sonucu henüz üretilmedi.

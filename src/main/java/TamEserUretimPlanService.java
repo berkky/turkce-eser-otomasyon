@@ -30,8 +30,9 @@ public final class TamEserUretimPlanService {
         String baslik = detay != null ? detay.ozet().eserAdi() : "ESER-" + String.format("%05d", eserId);
         List<TamEserUretimParcasi> parcalar = parcalariTopla(eserId);
 
-        int karakter = maliyet.toplamKarakter();
-        int parcaSayisi = parcalar.isEmpty() ? maliyet.ttsParca() : parcalar.size();
+        int karakter = parcalar.stream().mapToInt(TamEserUretimParcasi::karakterSayisi).sum();
+        int parcaSayisi = parcalar.size();
+        boolean kaynakGecerli = karakter > 0 && parcaSayisi > 0;
         String model = ElevenLabsModelPolitikasi.ortamModeliVeyaVarsayilan();
         long krediIhtiyaci = maliyet.tamUretimTahminiKredi();
         long kalan = maliyet.kalanElevenLabsKredisi();
@@ -42,7 +43,12 @@ public final class TamEserUretimPlanService {
 
         TamEserUretimRisk risk;
         String onerilen;
-        if (buyuk) {
+        if (!kaynakGecerli) {
+            risk = TamEserUretimRisk.ENGELLI;
+            onerilen = maliyet.onerilenAksiyon().startsWith("SOURCE_")
+                    ? maliyet.onerilenAksiyon()
+                    : "SOURCE_TEXT_NOT_FOUND";
+        } else if (buyuk) {
             risk = TamEserUretimRisk.YUKSEK;
             onerilen = "BUYUK_ESER_MANUEL_ONAY — yüksek risk; açık onay ve maliyet planı zorunlu. Otomatik üretim kapalı.";
         } else if (!mockAktif && !apiHazir && maliyet.krediYok()) {
@@ -83,8 +89,9 @@ public final class TamEserUretimPlanService {
     }
 
     public TamEserUretimPlani planGetir(int eserId) throws Exception {
-        TamEserUretimPlani mevcut = depo.planOku(eserId);
-        return mevcut != null ? mevcut : planUret(eserId);
+        // Kaynak arşivi değişebilir; sıfır/stale planı güvenilir kabul etmek yerine
+        // her okumada yalnız yerel dosyalardan yeniden hesapla. Bu işlem TTS başlatmaz.
+        return planUret(eserId);
     }
 
     public String json(int eserId) throws Exception {
@@ -112,7 +119,7 @@ public final class TamEserUretimPlanService {
                     .toList();
             int sira = 1;
             for (Path p : dosyalar) {
-                int karakter = (int) Math.min(Integer.MAX_VALUE, Files.size(p));
+                int karakter = Files.readString(p, StandardCharsets.UTF_8).length();
                 int sure = Math.max(1, karakter / 15);
                 parcalar.add(new TamEserUretimParcasi(sira++, p.getFileName().toString(), karakter, sure));
             }
@@ -121,7 +128,7 @@ public final class TamEserUretimPlanService {
     }
 
     private static int tahminiDakika(int karakter) {
-        return Math.max(1, (int) Math.ceil(karakter / (double) KARAKTER_DAKIKA));
+        return karakter <= 0 ? 0 : (int) Math.ceil(karakter / (double) KARAKTER_DAKIKA);
     }
 
     private static Path eserKlasoruBul(Path ana, int eserId) throws Exception {

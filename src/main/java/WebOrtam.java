@@ -1,4 +1,5 @@
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Web paneli için ortam yolları ve sabitler.
@@ -15,6 +16,7 @@ public final class WebOrtam {
     private final Path kuyruk;
     private final Path katalog;
     private final Path kalitePanel;
+    private final List<String> pathWarnings;
 
     public WebOrtam(Path projeKlasoru) {
         this(projeKlasoru, null, null, null, null, null, null, null);
@@ -24,27 +26,25 @@ public final class WebOrtam {
     public WebOrtam(Path projeKlasoru, Path gelenKlasoru, Path arsiv, Path metinArsivi,
                     Path sesArsivi, Path kuyruk, Path katalog, Path kalitePanel) {
         this.projeKlasoru = projeKlasoru.toAbsolutePath().normalize();
-        Path masaustu = Path.of(System.getProperty("user.home"), "Desktop");
+        EserVeriYollari yollar = EserVeriYollari.varsayilan();
         this.gelenKlasoru = gelenKlasoru != null ? gelenKlasoru
-                : ortamYolu("ESER_GELEN_KLASORU", masaustu.resolve("gelen-eser"));
-        this.arsiv = arsiv != null ? arsiv : ortamYolu("ESER_ARSIVI", masaustu.resolve("arsiv"));
+                : yollar.gelen();
+        this.arsiv = arsiv != null ? arsiv : yollar.arsiv();
         this.metinArsivi = metinArsivi != null ? metinArsivi
-                : ortamYolu("ESER_METIN_ARSIVI", masaustu.resolve("metin-arsivi"));
+                : yollar.metin();
         this.sesArsivi = sesArsivi != null ? sesArsivi
-                : ortamYolu("ESER_SES_ARSIVI", masaustu.resolve("ses-arsivi"));
-        this.kuyruk = kuyruk != null ? kuyruk : ortamYolu("ESER_URETIM_KUYRUGU", masaustu.resolve("eser-otomasyon-kuyruk"));
-        this.katalog = katalog != null ? katalog : ortamYolu("ESER_KATALOGU", masaustu.resolve("eser-katalogu.xlsx"));
+                : yollar.ses();
+        this.kuyruk = kuyruk != null ? kuyruk : yollar.kuyruk();
+        this.katalog = katalog != null ? katalog : yollar.katalog();
         this.kalitePanel = kalitePanel != null ? kalitePanel
-                : ortamYolu("SES_KALITE_PANEL", masaustu.resolve("ses-arsivi_kalite-panel"));
+                : yollar.kalitePanel();
+        this.pathWarnings = gelenKlasoru == null && arsiv == null && metinArsivi == null
+                && sesArsivi == null && kuyruk == null && katalog == null
+                ? yollar.warnings() : List.of();
     }
 
     public static WebOrtam varsayilan() {
         return new WebOrtam(Path.of(System.getProperty("user.dir")));
-    }
-
-    private static Path ortamYolu(String ad, Path varsayilan) {
-        String deger = System.getenv(ad);
-        return deger == null || deger.isBlank() ? varsayilan : Path.of(deger.trim()).toAbsolutePath().normalize();
     }
 
     public Path projeKlasoru() { return projeKlasoru; }
@@ -55,4 +55,5 @@ public final class WebOrtam {
     public Path kuyruk() { return kuyruk; }
     public Path katalog() { return katalog; }
     public Path kalitePanel() { return kalitePanel; }
+    public List<String> pathWarnings() { return pathWarnings; }
 }

@@ -25,7 +25,7 @@ Tam eser TTS üretimi maliyetli ve geri dönüşü zordur. Farklı sağlayıcı,
 powershell -ExecutionPolicy Bypass -File .\ses-kalite-panel.ps1
 ```
 
-Çıktı: `C:\Users\Lenovo\Desktop\ses-arsivi_kalite-panel\index.html`
+Çıktı: `%USERPROFILE%\Desktop\ESER\ses-arsivi_kalite-panel\index.html`
 
 Tarayıcıda `index.html` dosyasını açın. Sunucu veya internet gerekmez.
 

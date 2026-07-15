@@ -8,10 +8,17 @@ import java.util.zip.ZipFile;
  * Adım 33 — Final teslim paketi ve gönderim hazırlığı doğrulamaları.
  */
 public final class Adim33Dogrulama {
-    private static final Path TESLIM_KLASOR =
-            Path.of(System.getenv().getOrDefault("USERPROFILE", System.getProperty("user.home")),
-                    "Desktop", "turkce-eser-final-teslim");
+    private static final Path TESLIM_KLASOR = teslimKlasoru();
     private static final String ZIP_ADI = "turkce-eser-otomasyon-final.zip";
+
+    private static Path teslimKlasoru() {
+        String override = System.getenv("TESLIM_KLASOR");
+        if (override != null && !override.isBlank()) {
+            return Path.of(override).toAbsolutePath().normalize();
+        }
+        return Path.of(System.getenv().getOrDefault("USERPROFILE", System.getProperty("user.home")),
+                "Desktop", "turkce-eser-final-teslim");
+    }
 
     public static void main(String[] args) throws Exception {
         Utf8Konsol.etkinlestir();

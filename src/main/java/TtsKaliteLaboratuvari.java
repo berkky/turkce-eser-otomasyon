@@ -15,6 +15,7 @@ public final class TtsKaliteLaboratuvari {
         List<TtsSaglayici> saglayicilar = List.of(
                 new ElevenLabsTtsSaglayici(),
                 new OpenAITtsSaglayici(),
+                new XaiTtsSaglayici(),
                 new GeminiTtsSaglayici(proje),
                 new GoogleCloudTtsSaglayici("tr-TR-Chirp3-HD-Charon"),
                 new GoogleCloudTtsSaglayici("tr-TR-Chirp3-HD-Fenrir"),
@@ -82,7 +83,7 @@ public final class TtsKaliteLaboratuvari {
             System.out.println("İptal edildi."); return;
         }
 
-        Path kok = Path.of(System.getProperty("user.home"), "Desktop", "tts-kalite-laboratuvari",
+        Path kok = EserVeriYollari.varsayilan().canonicalRoot().resolve("tts-kalite-laboratuvari").resolve(
                 LocalDateTime.now().format(DAMGA));
         Path ham = kok.resolve("ham-ciktilar");
         Path kor = kok.resolve("kor-dinleme");
@@ -152,7 +153,7 @@ public final class TtsKaliteLaboratuvari {
     }
 
     private static void siralamaHesapla(BufferedReader konsol) throws Exception {
-        Path ana = Path.of(System.getProperty("user.home"), "Desktop", "tts-kalite-laboratuvari");
+        Path ana = EserVeriYollari.varsayilan().canonicalRoot().resolve("tts-kalite-laboratuvari");
         Path varsayilan = enYeniExcel(ana);
         System.out.print("Excel yolu" + (varsayilan == null ? "" : " [Enter = " + varsayilan + "]") + ": ");
         String girdi = konsol.readLine().trim();
