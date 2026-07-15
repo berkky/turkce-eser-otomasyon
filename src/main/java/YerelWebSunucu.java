@@ -30,6 +30,7 @@ public final class YerelWebSunucu {
     private final DemoRaporService demoRapor;
     private final TtsAbWebService abTest;
     private final KasagiPasajWebService passageSelection;
+    private final KasagiLivePreviewWebService livePreview;
     private final ObjectMapper json = new ObjectMapper();
     private HttpServer sunucu;
     private ExecutorService executor;
@@ -43,6 +44,7 @@ public final class YerelWebSunucu {
         this.demoRapor = new DemoRaporService(ortam);
         this.abTest = new TtsAbWebService(ortam);
         this.passageSelection = new KasagiPasajWebService(ortam);
+        this.livePreview = new KasagiLivePreviewWebService(ortam);
         islemService.klasorleriHazirla();
         kalitePanel.yenile();
     }
@@ -159,6 +161,10 @@ public final class YerelWebSunucu {
         }
         if (path.equals("/ab-test/pasajlar") || path.startsWith("/ab-test/pasajlar/")) {
             return passageSelection.route(method, path, body);
+        }
+        if (path.equals("/ab-test/live-preview") || path.startsWith("/ab-test/live-preview/")
+                || path.startsWith("/api/ab-test/live-preview/")) {
+            return livePreview.route(method, path, body);
         }
         if (path.equals("/ab-test") || path.startsWith("/ab-test/")) {
             return abTest.route(method, path, body);

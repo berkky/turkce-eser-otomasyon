@@ -140,8 +140,13 @@ public final class Adim34Dogrulama {
             leaking.uretDetayli(request("secret", "Secret log testi"), root);
             throw new AssertionError("401 bekleniyordu");
         } catch (XaiTtsSaglayici.XaiTtsException e) {
+            // Adım 36A.2: provider response body exception/log'a yazılmaz.
             check(!e.getMessage().contains("dummy-test-api-key-not-real")
-                    && e.getMessage().contains("[REDACTED]"), "API anahtarı loglanmaz");
+                            && !e.getMessage().contains("Bearer "),
+                    "API anahtarı loglanmaz");
+            check(e.getMessage().contains("HTTP 401")
+                            || e.code().equals("UNAUTHORIZED"),
+                    "HTTP status güvenli hata mesajında");
         }
     }
 

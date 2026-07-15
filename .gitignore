@@ -19,6 +19,14 @@ secrets.json
 token.json
 provider-mapping.private.json
 
+# Adım 36 canlı çıktıları (repo'ya girmez)
+**/live-preview/
+**/live-generation-approval.json
+**/approval-consumption.json
+**/*-request.safe.json
+AHMET-BEY-SES-KARSILASTIRMASI*/
+ADIM_36*_CURSOR_FINAL_RAPORU.md
+
 dist/
 build/
 out/

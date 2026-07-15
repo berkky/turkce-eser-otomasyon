@@ -104,7 +104,8 @@ public final class XaiTtsSaglayici implements TtsSaglayici {
             format = "wav";
         } else {
             XaiHttpResponse response = null;
-            for (int attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            int maxAttempts = context.allowAutomaticRetry() ? MAX_RETRIES : 0;
+            for (int attempt = 0; attempt <= maxAttempts; attempt++) {
                 BigDecimal attemptCost = estimatedCost(istek.metin());
                 if (reserved.add(attemptCost).compareTo(context.budgetUsd()) > 0) {
                     throw new XaiTtsException("BUDGET_EXCEEDED", 0,
@@ -123,13 +124,16 @@ public final class XaiTtsSaglayici implements TtsSaglayici {
                     break;
                 }
                 String code = errorCode(response.statusCode());
-                if (attempt < MAX_RETRIES && retryable(response.statusCode())) {
+                if (attempt < maxAttempts && retryable(response.statusCode())) {
                     retryCount++;
                     sleeper.sleep(Math.min(8_000L, 500L * (1L << attempt)));
                     continue;
                 }
+                String rid = maskedRequestId(response.headers());
                 throw new XaiTtsException(code, response.statusCode(),
-                        "xAI TTS HTTP " + response.statusCode() + ": " + safeBody(response.body()));
+                        "xAI TTS HTTP " + response.statusCode()
+                                + (rid.isBlank() ? "" : " requestId=" + rid)
+                                + " — yeniden onay gerekir; response body loglanmaz");
             }
             if (response == null) {
                 throw new XaiTtsException("NO_RESPONSE", 0, "xAI TTS yanıtı alınamadı.");
@@ -190,6 +194,7 @@ public final class XaiTtsSaglayici implements TtsSaglayici {
         root.put("voice_id", config.voice());
         root.put("language", config.language());
         root.put("speed", 1.0);
+        root.put("text_normalization", false);
         ObjectNode output = root.putObject("output_format");
         output.put("codec", format);
         output.put("sample_rate", 44_100);
@@ -293,16 +298,28 @@ public final class XaiTtsSaglayici implements TtsSaglayici {
         return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
     }
 
-    private static String safeBody(byte[] body) {
-        if (body == null) return "";
-        return safe(new String(body, StandardCharsets.UTF_8));
-    }
-
     private static String safe(String value) {
         if (value == null) return "";
         return TtsLaboratuvarYardimci.kisalt(value
                 .replaceAll("(?i)bearer\\s+[A-Za-z0-9._-]+", "Bearer [REDACTED]")
                 .replaceAll("(?i)(api[_-]?key[\"']?\\s*[:=]\\s*[\"']?)[^\\s,\"']+", "$1[REDACTED]"), 500);
+    }
+
+    /** Response body asla exception/log'a eklenmez. */
+    static String maskedRequestId(Map<String, String> headers) {
+        if (headers == null || headers.isEmpty()) return "";
+        String raw = null;
+        for (Map.Entry<String, String> e : headers.entrySet()) {
+            String k = e.getKey() == null ? "" : e.getKey().toLowerCase(Locale.ROOT);
+            if ("x-request-id".equals(k) || "request-id".equals(k)) {
+                raw = e.getValue();
+                break;
+            }
+        }
+        if (raw == null || raw.isBlank()) return "";
+        String v = raw.trim();
+        if (v.length() <= 8) return "****";
+        return v.substring(0, 4) + "…" + v.substring(v.length() - 4);
     }
 
     record XaiConfig(String apiKey, String voice, String language, boolean liveEnabled,
@@ -329,19 +346,28 @@ public final class XaiTtsSaglayici implements TtsSaglayici {
     record XaiRequestContext(String eserId, boolean cliConfirmed, boolean dryRun,
                              boolean sourceApproved, BigDecimal budgetUsd,
                              String sourceType, String sourceLicenseNote,
-                             String approvedSourceHash, String currentSourceHash) {
+                             String approvedSourceHash, String currentSourceHash,
+                             boolean allowAutomaticRetry) {
         XaiRequestContext(String eserId, boolean cliConfirmed, boolean dryRun,
                           boolean sourceApproved, BigDecimal budgetUsd) {
             this(eserId, cliConfirmed, dryRun, sourceApproved, budgetUsd,
                     TtsAbSourceType.APPROVED_ARCHIVE_TEXT.name(),
                     "Ticari kullanım lisansı kullanıcı tarafından doğrulandı.",
-                    "approved-test-hash", "approved-test-hash");
+                    "approved-test-hash", "approved-test-hash", true);
+        }
+
+        XaiRequestContext(String eserId, boolean cliConfirmed, boolean dryRun,
+                          boolean sourceApproved, BigDecimal budgetUsd,
+                          String sourceType, String sourceLicenseNote,
+                          String approvedSourceHash, String currentSourceHash) {
+            this(eserId, cliConfirmed, dryRun, sourceApproved, budgetUsd,
+                    sourceType, sourceLicenseNote, approvedSourceHash, currentSourceHash, true);
         }
 
         static XaiRequestContext mock() {
             return new XaiRequestContext("ESER-00005", false, true, false, BigDecimal.ONE,
                     TtsAbSourceType.FIXTURE.name(), "Test fixture; ticari lisans kanıtı değildir.",
-                    "", "");
+                    "", "", false);
         }
     }
 

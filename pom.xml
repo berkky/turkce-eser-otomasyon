@@ -103,5 +103,17 @@
                 <exec.mainClass>Adim35BDogrulama</exec.mainClass>
             </properties>
         </profile>
+        <profile>
+            <id>adim36ADogrulama</id>
+            <properties>
+                <exec.mainClass>Adim36ADogrulama</exec.mainClass>
+            </properties>
+        </profile>
+        <profile>
+            <id>adim36LiveGenerate</id>
+            <properties>
+                <exec.mainClass>Adim36LiveGenerateApp</exec.mainClass>
+            </properties>
+        </profile>
     </profiles>
 </project>
