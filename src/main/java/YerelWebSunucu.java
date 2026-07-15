@@ -29,6 +29,7 @@ public final class YerelWebSunucu {
     private final DemoMetrikService demoMetrik;
     private final DemoRaporService demoRapor;
     private final TtsAbWebService abTest;
+    private final KasagiPasajWebService passageSelection;
     private final ObjectMapper json = new ObjectMapper();
     private HttpServer sunucu;
     private ExecutorService executor;
@@ -41,6 +42,7 @@ public final class YerelWebSunucu {
         this.demoMetrik = new DemoMetrikService(ortam);
         this.demoRapor = new DemoRaporService(ortam);
         this.abTest = new TtsAbWebService(ortam);
+        this.passageSelection = new KasagiPasajWebService(ortam);
         islemService.klasorleriHazirla();
         kalitePanel.yenile();
     }
@@ -137,6 +139,9 @@ public final class YerelWebSunucu {
         if (path.equals("/api/alignment") && "GET".equals(method)) {
             return WebResponse.jsonOk(new AlignmentService(ortam.sesArsivi()).jsonListe());
         }
+        if (path.startsWith("/api/ab-test/pasajlar/")) {
+            return passageSelection.route(method, path, body);
+        }
         if (path.startsWith("/api/alignment/") && "GET".equals(method)) {
             return alignmentApi(path, query, accept);
         }
@@ -151,6 +156,9 @@ public final class YerelWebSunucu {
         }
         if (path.equals("/api/demo/akis") && "GET".equals(method)) {
             return WebResponse.jsonOk(demoAkis.akisJson());
+        }
+        if (path.equals("/ab-test/pasajlar") || path.startsWith("/ab-test/pasajlar/")) {
+            return passageSelection.route(method, path, body);
         }
         if (path.equals("/ab-test") || path.startsWith("/ab-test/")) {
             return abTest.route(method, path, body);

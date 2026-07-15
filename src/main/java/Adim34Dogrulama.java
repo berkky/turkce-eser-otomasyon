@@ -358,8 +358,8 @@ public final class Adim34Dogrulama {
             Path eser5 = actual.metinArsivi().resolve("ESER-00005 - Kasagi - Vikikaynak");
             check(Files.isDirectory(eser5) && Files.isRegularFile(eser5.resolve("tam-metin.txt")),
                     "ESER-00005 gerçek kaynak resolver");
-            TamEserUretimPlani plan5 = new TamEserUretimPlanService(actual).planUret(5);
-            TamEserUretimPlani plan6 = new TamEserUretimPlanService(actual).planUret(6);
+            TamEserUretimPlani plan5 = new TamEserUretimPlanService(actual).planGetir(5);
+            TamEserUretimPlani plan6 = new TamEserUretimPlanService(actual).planGetir(6);
             long diskParca6;
             Path eser6;
             try (var folders = Files.list(actual.metinArsivi())) {

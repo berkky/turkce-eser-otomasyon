@@ -14,7 +14,7 @@ public final class TamEserPlanApp {
         System.out.println("Not: Gerçek TTS üretimi yapılmaz. Yalnızca plan JSON oluşturulur.");
         System.out.println();
 
-        TamEserUretimPlani plan = svc.planUret(eserId);
+        TamEserUretimPlani plan = svc.planGetir(eserId);
         System.out.println("Başlık: " + plan.baslik());
         System.out.println("Karakter: " + plan.toplamKarakter());
         System.out.println("TTS parça: " + plan.ttsParcaSayisi());

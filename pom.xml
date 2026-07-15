@@ -6,7 +6,7 @@
 
     <groupId>com.proje</groupId>
     <artifactId>eser-otomasyon</artifactId>
-    <version>34.0.0</version>
+    <version>35.0.0</version>
 
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
@@ -71,4 +71,37 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>adim35PasajAdaylari</id>
+            <properties>
+                <exec.mainClass>Adim35PasajApp</exec.mainClass>
+            </properties>
+        </profile>
+        <profile>
+            <id>adim35Dogrulama</id>
+            <properties>
+                <exec.mainClass>Adim35Dogrulama</exec.mainClass>
+            </properties>
+        </profile>
+        <profile>
+            <id>adim35Web</id>
+            <properties>
+                <exec.mainClass>YerelWebSunucuApp</exec.mainClass>
+            </properties>
+        </profile>
+        <profile>
+            <id>adim35SelfTest</id>
+            <properties>
+                <exec.mainClass>Adim35Dogrulama</exec.mainClass>
+            </properties>
+        </profile>
+        <profile>
+            <id>adim35BDogrulama</id>
+            <properties>
+                <exec.mainClass>Adim35BDogrulama</exec.mainClass>
+            </properties>
+        </profile>
+    </profiles>
 </project>

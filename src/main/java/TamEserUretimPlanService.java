@@ -89,8 +89,16 @@ public final class TamEserUretimPlanService {
     }
 
     public TamEserUretimPlani planGetir(int eserId) throws Exception {
-        // Kaynak arşivi değişebilir; sıfır/stale planı güvenilir kabul etmek yerine
-        // her okumada yalnız yerel dosyalardan yeniden hesapla. Bu işlem TTS başlatmaz.
+        TamEserUretimPlani existing = depo.planOku(eserId);
+        List<TamEserUretimParcasi> currentParts = parcalariTopla(eserId);
+        int currentCharacters = currentParts.stream().mapToInt(TamEserUretimParcasi::karakterSayisi).sum();
+        if (existing != null && existing.toplamKarakter() > 0 && existing.ttsParcaSayisi() > 0
+                && existing.toplamKarakter() == currentCharacters
+                && existing.ttsParcaSayisi() == currentParts.size()
+                && existing.parcalar().equals(currentParts)) {
+            return existing;
+        }
+        // Sıfır veya kaynakla uyuşmayan cache yalnız canonical kaynaktan yenilenir.
         return planUret(eserId);
     }
 

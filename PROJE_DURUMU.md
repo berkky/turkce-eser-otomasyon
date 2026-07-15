@@ -1,4 +1,4 @@
-# Proje Durumu — Adım 34
+# Proje Durumu — Adım 35
 
 ## Adım özeti (1–32)
 
@@ -14,8 +14,9 @@
 | 32 | Final release kalite kapısı |
 | 33 | Final teslim paketi ve gönderim hazırlığı |
 | 34 | Türkçe TTS A/B laboratuvarı, xAI ve kör değerlendirme |
+| 35 | Gerçek Kaşağı pasaj seçimi, kaynak onayı ve kilitli OpenAI/xAI hazırlığı |
 
-## Mevcut durum (Adım 34)
+## Mevcut durum (Adım 35)
 
 - ESER-00005 için 900–1.200 karakterlik sabit kaynak hash ve mock-varsayılan deney akışı
 - xAI unary TTS adaptörü; live/CLI/eser/karakter/bütçe/idempotency kapıları
@@ -23,6 +24,8 @@
 - Localhost `/ab-test` değerlendirmesi, UTF-8 CSV ve submission ID koruması
 - Adım 21–33 regresyonu ve secret scan, `adim34-self-test.ps1` içinde başarıyla doğrulandı
 - Tam kitap, ESER-00006 canlı TTS, WebSocket ve voice cloning kapsam dışıdır
+- Canonical Kaşağı kaynağından üç deterministik gerçek pasaj adayı hazırdır
+- Pasaj onayı sonrası dahi OpenAI/xAI canlı üretimi ve bütçesi kilitlidir
 
 ## İki paket ayrımı
 
@@ -46,6 +49,7 @@ powershell -ExecutionPolicy Bypass -File .\patron-demo-paketi.ps1
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\adim33-self-test.ps1
 powershell -ExecutionPolicy Bypass -File .\adim34-self-test.ps1
+powershell -ExecutionPolicy Bypass -File .\adim35-self-test.ps1
 powershell -ExecutionPolicy Bypass -File .\tts-ab-lab.ps1 -Mock -Seed 340034
 powershell -ExecutionPolicy Bypass -File .\teslim-paketi-olustur.ps1
 powershell -ExecutionPolicy Bypass -File .\teslim-paketi-kontrol.ps1
@@ -55,4 +59,4 @@ powershell -ExecutionPolicy Bypass -File .\check-secrets.ps1
 
 ## Teslim durumu
 
-**Adım 34 tamamlandı** — mock A/B paketi ve güvenli canlı xAI kapısı hazır; canlı kalite sonucu henüz üretilmedi.
+**Adım 35 tamamlandı** — gerçek pasaj seçimi ve kaynak onay akışı hazır; hiçbir canlı ses üretilmedi.

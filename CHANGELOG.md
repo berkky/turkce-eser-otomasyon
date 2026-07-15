@@ -1,5 +1,12 @@
 # Değişiklik Günlüğü
 
+## 35.0.0 — Gerçek Kaşağı pasaj seçimi ve canlı önizleme hazırlığı
+- Canonical ESER-00005 metninden deterministik, 900–1.250 karakterlik üç pasaj adayı.
+- Original/normalize hash, mekanik değişiklik kaydı, kaynak ve `REVIEW_REQUIRED` lisans statüsü.
+- Localhost pasaj seçim/onay ekranı; tek kullanımlık token ve duplicate submission koruması.
+- OpenAI/xAI profil taslakları ve ortak `LIVE_GENERATION_LOCKED` dosyası; ağ/ses üretimi yok.
+- Adım 35 offline doğrulama, UAT, güvenlik ve kaynak/lisans dokümantasyonu.
+
 ## 34.0.0 — Türkçe TTS A/B ses laboratuvarı
 - ESER-00005 için sabit kaynak hash, deney/aday/manifest modelleri ve mock-varsayılan orkestrasyon.
 - xAI unary TTS adaptörü; live/CLI/eser/karakter/bütçe/idempotency kapıları ve yerel fake HTTP testleri.
