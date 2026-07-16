@@ -61,7 +61,7 @@ public final class Adim36ADogrulama {
                 .directory(Path.of("").toAbsolutePath().toFile()).start();
         String head = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
         p.waitFor();
-        check(head.startsWith("1b109d6") || head.equals("1b109d6"), "Git checkpoint HEAD 1b109d6");
+        check(head.startsWith("eb11f98") || head.equals("eb11f98"), "Git checkpoint HEAD eb11f98");
     }
 
     private static void canonicalApproved(WebOrtam actual) throws Exception {
@@ -489,11 +489,29 @@ public final class Adim36ADogrulama {
         check(preflight.contains("LIVE_PROVIDER_NOT_APPROVED")
                         && preflight.contains("LIVE_APPROVAL_EXPIRED"),
                 "Preflight approval yok/expired READY vermez");
+        check(preflight.contains("repo-private-audio-scan.ps1")
+                        && preflight.contains("Find-RepoPrivateAudioLeaks"),
+                "Preflight Extension tabanlı audio scan helper kullanır");
+        check(!preflight.contains("-Include *.wav") && !preflight.contains("-Include *.mp3"),
+                "Preflight Get-ChildItem -Include audio filtresi kullanmaz");
+        String audioScan = Files.readString(Path.of("repo-private-audio-scan.ps1"), StandardCharsets.UTF_8);
+        check(audioScan.contains("ToLowerInvariant()")
+                        && audioScan.contains(".wav")
+                        && audioScan.contains(".mp3")
+                        && audioScan.contains(".zip")
+                        && audioScan.contains("target")
+                        && audioScan.contains("node_modules")
+                        && audioScan.contains(".git"),
+                "Audio scan Extension + exclude (target/node_modules/.git)");
+        check(!audioScan.contains("-Include"),
+                "Audio scan helper Include kullanmaz");
+        String selfTest = Files.readString(Path.of("adim36a-self-test.ps1"), StandardCharsets.UTF_8);
+        check(selfTest.contains("adim36b0RepoAudioScan"),
+                "Self-test adim36b0RepoAudioScan davranışsal tarama içerir");
         check(Files.readString(Path.of("maven-resolve.ps1"), StandardCharsets.UTF_8)
                         .contains("MAVEN_NOT_FOUND"),
                 "Maven resolver MAVEN_NOT_FOUND");
-        check(!Files.readString(Path.of("adim36a-self-test.ps1"), StandardCharsets.UTF_8)
-                        .contains("C:\\Tools\\apache-maven"),
+        check(!selfTest.contains("C:\\Tools\\apache-maven"),
                 "Self-test C:\\Tools hardcoded Maven kullanmaz");
         forceOffline();
     }

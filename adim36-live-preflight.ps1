@@ -8,6 +8,7 @@ param(
 . (Join-Path $PSScriptRoot "konsol-utf8.ps1")
 . (Join-Path $PSScriptRoot "canonical-paths.ps1")
 . (Join-Path $PSScriptRoot "maven-resolve.ps1")
+. (Join-Path $PSScriptRoot "repo-private-audio-scan.ps1")
 $ErrorActionPreference = "Stop"
 
 function Fail-Preflight([string]$Code) {
@@ -166,10 +167,14 @@ Write-Utf8Line "OK: unresolved attempt yok"
 Write-Utf8Line "OK: selectedProviderLiveFlag=false (preflight); other=false"
 Write-Utf8Line "OK: networkCalls=false"
 
-# No private/audio dump in repo root
-$repoAudio = Get-ChildItem -LiteralPath $PSScriptRoot -Recurse -Include *.wav,*.mp3,*.zip -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.FullName -notmatch '\\target\\' -and $_.FullName -notmatch '\\node_modules\\' }
-if ($repoAudio) { Fail-Preflight "REPO_PRIVATE_AUDIO_LEAK" }
+# No private/audio dump in repo — Extension filtresi (Include kullanma; yanlış pozitif üretir)
+$repoAudioLeaks = @(Find-RepoPrivateAudioLeaks -Root $PSScriptRoot)
+if ($repoAudioLeaks.Count -gt 0) {
+    foreach ($line in @(Format-RepoPrivateAudioLeakPublicOutput -RelativePaths $repoAudioLeaks -MaxPaths 10)) {
+        Write-Utf8Line $line
+    }
+    exit 1
+}
 
 Write-Utf8Line "PREFLIGHT_READY"
 exit 0
